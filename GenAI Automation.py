@@ -118,7 +118,7 @@ if st.session_state.get("submitted"):
 
 # ------------------ FORM ------------------
 with st.container():
-    st.title("📦 Vendor Quotation Form")
+    st.title("🚛 Vendor Quotation Form")
 
     col1, col2 = st.columns(2)
     with col1:
