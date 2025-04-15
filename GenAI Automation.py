@@ -36,14 +36,14 @@ st.set_page_config(page_title="Vendor RFQ", page_icon="🚛", layout="centered")
 st.markdown("""
     <style>
     .stApp {
-        background: linear-gradient(to right, #f9f9f9, #e0f7fa);
+        background: linear-gradient(to right, #f0f8ff, #e1f5fe);
         background-attachment: fixed;
     }
     .main {
-        background-color: rgba(255, 255, 255, 0.96);
+        background-color: rgba(255, 255, 255, 0.95);
         padding: 2rem;
         border-radius: 12px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         margin-top: 40px;
     }
     .stTextInput > div > div > input,
@@ -53,17 +53,17 @@ st.markdown("""
         padding: 10px;
     }
     .stButton > button {
-        background-color: #00796b;
+        background-color: #009688;
         color: white;
         font-weight: bold;
         border-radius: 8px;
         padding: 12px 25px;
     }
-    .logo {
+    .top-right-logo {
         position: fixed;
         top: 15px;
-        left: 15px;
-        z-index: 999;
+        right: 15px;
+        z-index: 9999;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -102,18 +102,18 @@ def append_to_region_file(region: str, df_submission: pd.DataFrame):
 def reset_routes():
     st.session_state["route_id"] = []
 
-# ------------------ THANK YOU SCREEN ------------------
-if st.session_state.get("submitted"):
-    st.image("https://media.istockphoto.com/id/1320863289/vector/thank-you-truck-drivers.jpg?s=2048x2048&w=is&k=20&c=Qic824Mc-SDH-WxZ5_T6QDEdpxWR2vEQgJrBV4VZwUE=", width=600)
-    st.success("🎉 Thank you for your submission!")
-    st.markdown("Your data has been stored successfully. You may now close this tab.")
-    st.stop()
-
-# ------------------ COMPANY LOGO ------------------
+# ------------------ LOGO IN TOP-RIGHT ------------------
 st.markdown(
-    '<img src="https://quantum-i.ai/wp-content/uploads/2024/11/Quantum-i_Main_Logo_V1_60.png" width="100" class="logo">',
+    '<img class="top-right-logo" src="https://quantum-i.ai/wp-content/uploads/2024/11/Quantum-i_Main_Logo_V1_60.png" width="110">',
     unsafe_allow_html=True
 )
+
+# ------------------ THANK YOU SCREEN ------------------
+if st.session_state.get("submitted"):
+    st.image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSLdIRKMZQDaHaWoaOeelSlj7TtP3Zs57xEMw&s", width=500)
+    st.markdown("## 🎉 Thank you for your submission!")
+    st.success("Your data has been saved successfully. You may now close the tab.")
+    st.stop()
 
 # ------------------ FORM ------------------
 with st.container():
