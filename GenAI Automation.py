@@ -36,6 +36,7 @@ ZONE_ROUTE_MAP = {
 TRUCK_TYPES = ["Container", "LCV", "MCV"]
 
 def get_routes(zone):
+    # Ensure that the region exists and return a list or an empty list
     return ZONE_ROUTE_MAP.get(zone, [])
 
 def get_truck_combos(route, truck_type):
@@ -103,57 +104,70 @@ st.markdown("""
 
 st.title("📦 Vendor RFQ Submission")
 
-# Handle region change & reset dependent fields
-def reset_route():
-    st.session_state["route_id"] = None
-    st.session_state["truck_type"] = None
+# Input fields for Vendor Name and Email at the top
+vendor_name = st.text_input("Your Company Name", key="vendor_name")
+vendor_email = st.text_input("Your Email Address", key="vendor_email")
 
-region = st.selectbox("Select Region", list(ZONE_ROUTE_MAP.keys()), key="region", on_change=reset_route)
+if not vendor_name or not vendor_email:
+    st.warning("Please provide both company name and email before proceeding.")
+else:
+    # Handle region change & reset dependent fields
+    def reset_route():
+        st.session_state["route_id"] = None
+        st.session_state["truck_type"] = None
 
-if region:
-    route_options = get_routes(region)
-    route_ids = st.multiselect("Select Route IDs", route_options, key="route_id")
+    region = st.selectbox("Select Region", list(ZONE_ROUTE_MAP.keys()), key="region", on_change=reset_route)
 
-truck_types = st.multiselect("Select Truck Types", TRUCK_TYPES, key="truck_types")
+    # Ensure that route_options is not None and has valid data
+    if region:
+        route_options = get_routes(region)
 
-# Form fields appear when route + truck type are selected
-if st.session_state.get("route_id") and st.session_state.get("truck_type"):
-    st.subheader("📝 Fill Truck Details")
-
-    combo_data = []
-    for route in route_ids:
-        for truck_type in truck_types:
-            count = st.number_input(f"{truck_type} - {route} - Truck Count", min_value=0, key=f"{route}_{truck_type}_count")
-            price = st.number_input(f"{truck_type} - {route} - Price", min_value=0.0, key=f"{route}_{truck_type}_price")
-            combo_data.append({"route_id": route,
-                               "truck_type": truck_type,
-                               "combo": f"{truck_type} - {route}",
-                               "truck_count": count,
-                               "price": price})
-
-    vendor_name = st.text_input("Your Company Name", key="vendor_name")
-
-    if st.button("Submit Response"):
-        if not vendor_name:
-            st.error("Please enter your company name.")
+        # Handle the case when no routes are available for the selected region
+        if not route_options:
+            st.error(f"No routes available for the selected region: {region}")
+            route_ids = []  # Set empty route list
         else:
-            submission_df = pd.DataFrame(combo_data)
-            submission_df["region"] = region
-            submission_df["vendor_name"] = vendor_name
-            submission_df["submitted_at"] = pd.Timestamp.now()
+            route_ids = st.multiselect("Select Route IDs", route_options, key="route_id")
 
-            try:
-                append_to_region_file(region, submission_df)
-                st.success("✅ Response submitted successfully!")
-                st.balloons()  # Optional: Show balloons for fun
-                st.rerun()  # Refresh the page
-                st.session_state["submitted"] = True  # Track submission status
-            except Exception as e:
-                st.error(f"❌ Error uploading to ADLS: {e}")
+    truck_types = st.multiselect("Select Truck Types", TRUCK_TYPES, key="truck_types")
 
-# Show Thank You page if submission is successful
-if "submitted" in st.session_state and st.session_state["submitted"]:
-    st.header("🎉 Thank You for Your Submission!")
-    st.write("Your response has been successfully submitted and will be processed.")
-    st.write("You can close this window or fill another form.")
-    st.session_state["submitted"] = False  # Reset submission status after showing thank you message
+    # Form fields appear when route + truck type are selected
+    if st.session_state.get("route_id") and st.session_state.get("truck_type"):
+        st.subheader("📝 Fill Truck Details")
+
+        combo_data = []
+        for route in route_ids:
+            for truck_type in truck_types:
+                count = st.number_input(f"{truck_type} - {route} - Truck Count", min_value=0, key=f"{route}_{truck_type}_count")
+                price = st.number_input(f"{truck_type} - {route} - Price", min_value=0.0, key=f"{route}_{truck_type}_price")
+                combo_data.append({"route_id": route,
+                                   "truck_type": truck_type,
+                                   "combo": f"{truck_type} - {route}",
+                                   "truck_count": count,
+                                   "price": price})
+
+        if st.button("Submit Response"):
+            if not vendor_name or not vendor_email:
+                st.error("Please enter both company name and email.")
+            else:
+                submission_df = pd.DataFrame(combo_data)
+                submission_df["region"] = region
+                submission_df["vendor_name"] = vendor_name
+                submission_df["vendor_email"] = vendor_email
+                submission_df["submitted_at"] = pd.Timestamp.now()
+
+                try:
+                    append_to_region_file(region, submission_df)
+                    st.success("✅ Response submitted successfully!")
+                    st.balloons()  # Optional: Show balloons for fun
+                    st.rerun()  # Refresh the page
+                    st.session_state["submitted"] = True  # Track submission status
+                except Exception as e:
+                    st.error(f"❌ Error uploading to ADLS: {e}")
+
+    # Show Thank You page if submission is successful
+    if "submitted" in st.session_state and st.session_state["submitted"]:
+        st.header("🎉 Thank You for Your Submission!")
+        st.write("Your response has been successfully submitted and will be processed.")
+        st.write("You can close this window or fill another form.")
+        st.session_state["submitted"] = False  # Reset submission status after showing thank you message
