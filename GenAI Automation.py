@@ -35,24 +35,29 @@ st.set_page_config(page_title="Vendor RFQ", page_icon="🚛", layout="centered")
 # ------------------ STYLING ------------------
 st.markdown("""
     <style>
-    .stApp {
+    html, body, .stApp {
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 100% !important;
         background: linear-gradient(to right, #f0f8ff, #e1f5fe);
         background-attachment: fixed;
-        height: 100vh;
     }
+
     .main {
         background-color: rgba(255, 255, 255, 0.95);
         padding: 2rem;
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        margin-top: 40px;
+        margin-top: 0 !important;
     }
+
     .stTextInput > div > div > input,
     .stSelectbox > div > div > div > select,
     .stMultiSelect > div > div > div > select {
         border-radius: 8px;
         padding: 10px;
     }
+
     .stButton > button {
         background-color: #009688;
         color: white;
@@ -60,10 +65,21 @@ st.markdown("""
         border-radius: 8px;
         padding: 12px 25px;
     }
-    header {visibility: hidden;}  /* This hides the default Streamlit header completely */
-    .stApp > header {visibility: hidden;}  /* Ensures it's hidden on mobile too */
-    .css-1v0mbdj {display: none;}  /* Hides any additional patches or spaces */
-    .st-bm {padding-top: 0;}  /* Adjusting padding for no extra space at the top */
+
+    header, .stApp > header {
+        visibility: hidden;
+    }
+
+    .css-18e3th9 {
+        padding-top: 0 !important;
+    }
+
+    .thank-you-img {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -104,7 +120,11 @@ def reset_routes():
 # ------------------ THANK YOU SCREEN ------------------
 if st.session_state.get("submitted"):
     st.markdown("## 🎉 Thank you for your submission!")
-    st.image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHHjEEcoo3KwJ5PTfi2ys6nIQ7K2R8JBoYdw&s", width=300)
+    st.markdown("""
+        <div class="thank-you-img">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHHjEEcoo3KwJ5PTfi2ys6nIQ7K2R8JBoYdw&s" width="300">
+        </div>
+    """, unsafe_allow_html=True)
     st.success("Your data has been saved successfully. You may now close the tab.")
     st.stop()
 
@@ -160,6 +180,7 @@ with st.container():
             except Exception as e:
                 st.error(f"❌ Upload failed: {e}")
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
