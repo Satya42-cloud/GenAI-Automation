@@ -59,7 +59,9 @@ st.markdown("""
         border-radius: 8px;
         padding: 12px 25px;
     }
-    .css-1v0mbdj {display: none;}  /* This hides the white patch on the top of the page */
+    .css-1v0mbdj {display: none;}  /* This hides the white patch at the top of the page */
+    header {visibility: hidden;}  /* This hides the default Streamlit header completely */
+    .stApp > header {visibility: hidden;}  /* To make sure the header is hidden in mobile view */
     </style>
 """, unsafe_allow_html=True)
 
@@ -156,7 +158,6 @@ with st.container():
             except Exception as e:
                 st.error(f"❌ Upload failed: {e}")
     st.markdown('</div>', unsafe_allow_html=True)
-
 
 
 
