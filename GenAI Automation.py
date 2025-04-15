@@ -59,6 +59,7 @@ st.markdown("""
         border-radius: 8px;
         padding: 12px 25px;
     }
+    .css-1v0mbdj {display: none;}  /* This hides the white patch on the top of the page */
     </style>
 """, unsafe_allow_html=True)
 
@@ -98,7 +99,7 @@ def reset_routes():
 
 # ------------------ THANK YOU SCREEN ------------------
 if st.session_state.get("submitted"):
-    st.image("https://cached.pauloxmanpublishing.com/RS/SR/product/55/pm9_L_2985bce1.jpg", width=500)
+    st.image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHHjEEcoo3KwJ5PTfi2ys6nIQ7K2R8JBoYdw&s", width=300)
     st.markdown("## 🎉 Thank you for your submission!")
     st.success("Your data has been saved successfully. You may now close the tab.")
     st.stop()
@@ -155,6 +156,7 @@ with st.container():
             except Exception as e:
                 st.error(f"❌ Upload failed: {e}")
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
