@@ -32,18 +32,19 @@ TRUCK_TYPES = ["Container", "LCV", "MCV"]
 # ------------------ PAGE CONFIG ------------------
 st.set_page_config(page_title="Vendor RFQ", page_icon="🚛", layout="centered")
 
-# ------------------ STYLE ------------------
+# ------------------ STYLING ------------------
 st.markdown("""
     <style>
     .stApp {
-        background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+        background: linear-gradient(to right, #f9f9f9, #e0f7fa);
         background-attachment: fixed;
     }
     .main {
-        background-color: rgba(255, 255, 255, 0.95);
+        background-color: rgba(255, 255, 255, 0.96);
         padding: 2rem;
         border-radius: 12px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        margin-top: 40px;
     }
     .stTextInput > div > div > input,
     .stSelectbox > div > div > div > select,
@@ -52,16 +53,17 @@ st.markdown("""
         padding: 10px;
     }
     .stButton > button {
-        background-color: #16a085;
+        background-color: #00796b;
         color: white;
         font-weight: bold;
         border-radius: 8px;
         padding: 12px 25px;
     }
     .logo {
-        position: absolute;
-        top: 10px;
-        right: 15px;
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        z-index: 999;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -102,16 +104,14 @@ def reset_routes():
 
 # ------------------ THANK YOU SCREEN ------------------
 if st.session_state.get("submitted"):
-    st.markdown('<div class="main">', unsafe_allow_html=True)
-    st.image("https://cdn.pixabay.com/photo/2017/03/27/13/59/truck-2178774_1280.jpg", width=400)
+    st.image("https://media.istockphoto.com/id/1320863289/vector/thank-you-truck-drivers.jpg?s=2048x2048&w=is&k=20&c=Qic824Mc-SDH-WxZ5_T6QDEdpxWR2vEQgJrBV4VZwUE=", width=600)
     st.success("🎉 Thank you for your submission!")
     st.markdown("Your data has been stored successfully. You may now close this tab.")
-    st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
-# ------------------ LOGO ------------------
+# ------------------ COMPANY LOGO ------------------
 st.markdown(
-    '<img src="https://quantum-i.ai/wp-content/uploads/2024/11/Quantum-i_Main_Logo_V1_60.png" width="120" class="logo">',
+    '<img src="https://quantum-i.ai/wp-content/uploads/2024/11/Quantum-i_Main_Logo_V1_60.png" width="100" class="logo">',
     unsafe_allow_html=True
 )
 
