@@ -38,6 +38,7 @@ st.markdown("""
     .stApp {
         background: linear-gradient(to right, #f0f8ff, #e1f5fe);
         background-attachment: fixed;
+        height: 100vh;
     }
     .main {
         background-color: rgba(255, 255, 255, 0.95);
@@ -59,9 +60,10 @@ st.markdown("""
         border-radius: 8px;
         padding: 12px 25px;
     }
-    .css-1v0mbdj {display: none;}  /* This hides the white patch at the top of the page */
     header {visibility: hidden;}  /* This hides the default Streamlit header completely */
-    .stApp > header {visibility: hidden;}  /* To make sure the header is hidden in mobile view */
+    .stApp > header {visibility: hidden;}  /* Ensures it's hidden on mobile too */
+    .css-1v0mbdj {display: none;}  /* Hides any additional patches or spaces */
+    .st-bm {padding-top: 0;}  /* Adjusting padding for no extra space at the top */
     </style>
 """, unsafe_allow_html=True)
 
@@ -101,8 +103,8 @@ def reset_routes():
 
 # ------------------ THANK YOU SCREEN ------------------
 if st.session_state.get("submitted"):
-    st.image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHHjEEcoo3KwJ5PTfi2ys6nIQ7K2R8JBoYdw&s", width=300)
     st.markdown("## 🎉 Thank you for your submission!")
+    st.image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHHjEEcoo3KwJ5PTfi2ys6nIQ7K2R8JBoYdw&s", width=300)
     st.success("Your data has been saved successfully. You may now close the tab.")
     st.stop()
 
