@@ -29,37 +29,40 @@ ZONE_ROUTE_MAP = {
 
 TRUCK_TYPES = ["Container", "LCV", "MCV"]
 
-# ------------------ PAGE & BACKGROUND STYLING ------------------
-st.set_page_config(page_title="Vendor RFQ", page_icon="🚚", layout="centered")
+# ------------------ PAGE CONFIG ------------------
+st.set_page_config(page_title="Vendor RFQ", page_icon="🚛", layout="centered")
 
+# ------------------ STYLE ------------------
 st.markdown("""
     <style>
-        .stApp {
-            background-image: url("https://quantum-i.ai/wp-content/uploads/2024/11/Quantum-i_Main_Logo_V1_60.png");
-            background-repeat: no-repeat;
-            background-position: center center;
-            background-size: 400px;
-            opacity: 0.98;
-        }
-        .main {
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 0 12px rgba(0,0,0,0.1);
-        }
-        .stTextInput>div>div>input,
-        .stSelectbox>div>div>div>select,
-        .stMultiSelect>div>div>div>select {
-            border-radius: 8px;
-            padding: 10px;
-        }
-        .stButton>button {
-            background-color: #1abc9c;
-            color: white;
-            font-weight: bold;
-            border-radius: 8px;
-            padding: 12px 25px;
-        }
+    .stApp {
+        background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+        background-attachment: fixed;
+    }
+    .main {
+        background-color: rgba(255, 255, 255, 0.95);
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .stTextInput > div > div > input,
+    .stSelectbox > div > div > div > select,
+    .stMultiSelect > div > div > div > select {
+        border-radius: 8px;
+        padding: 10px;
+    }
+    .stButton > button {
+        background-color: #16a085;
+        color: white;
+        font-weight: bold;
+        border-radius: 8px;
+        padding: 12px 25px;
+    }
+    .logo {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -97,12 +100,20 @@ def append_to_region_file(region: str, df_submission: pd.DataFrame):
 def reset_routes():
     st.session_state["route_id"] = []
 
-# ------------------ THANK YOU PAGE ------------------
+# ------------------ THANK YOU SCREEN ------------------
 if st.session_state.get("submitted"):
+    st.markdown('<div class="main">', unsafe_allow_html=True)
+    st.image("https://cdn.pixabay.com/photo/2017/03/27/13/59/truck-2178774_1280.jpg", width=400)
     st.success("🎉 Thank you for your submission!")
-    st.image("https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif", width=300)
     st.markdown("Your data has been stored successfully. You may now close this tab.")
+    st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
+
+# ------------------ LOGO ------------------
+st.markdown(
+    '<img src="https://quantum-i.ai/wp-content/uploads/2024/11/Quantum-i_Main_Logo_V1_60.png" width="120" class="logo">',
+    unsafe_allow_html=True
+)
 
 # ------------------ FORM ------------------
 with st.container():
@@ -123,7 +134,6 @@ with st.container():
     region = st.selectbox("🌍 Select Region", list(ZONE_ROUTE_MAP.keys()), on_change=reset_routes, key="region")
     route_options = ZONE_ROUTE_MAP.get(region, [])
     route_ids = st.multiselect("🛣️ Select Route IDs", route_options, key="route_id")
-
     truck_types = st.multiselect("🚛 Select Truck Types", TRUCK_TYPES, key="truck_type")
 
     if route_ids and truck_types:
@@ -157,4 +167,5 @@ with st.container():
             except Exception as e:
                 st.error(f"❌ Upload failed: {e}")
     st.markdown('</div>', unsafe_allow_html=True)
+
 
