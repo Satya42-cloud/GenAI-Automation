@@ -1,3 +1,4 @@
+%%writefile rfq_adls_app.py
 import streamlit as st
 import pandas as pd
 import io
@@ -5,10 +6,13 @@ import time
 from azure.storage.filedatalake import DataLakeServiceClient
 
 # ------------------ CONFIG ------------------
-ADLS_ACCOUNT_NAME = "genaiautomationsa"
-ADLS_ACCOUNT_KEY = "vwwQ7uleP291h6A0NjsAdSAlUmlXW2qUipCvynul27mgrDjEqH7ofshn4GstabN6aj78c/DVQnLp+ASt7vdksg=="
-FILE_SYSTEM_NAME = "vendor-rfq"
+ADLS_ACCOUNT_NAME = "genaiautomationsa"  # Your ADLS account name
+ADLS_ACCOUNT_KEY = "vwwQ7uleP291h6A0NjsAdSAlUmlXW2qUipCvynul27mgrDjEqH7ofshn4GstabN6aj78c/DVQnLp+ASt7vdksg=="  # Your ADLS account key
+FILE_SYSTEM_NAME = "vendor-rfq" # Your ADLS file system name
 
+# --------------------------------------------
+# Zone and Route Mappings
+# --------------------------------------------
 ZONE_ROUTE_MAP = {
     "Andhra Region": [f"R{i:03d}" for i in range(1, 16)],
     "Bihar Plateau": [f"R{i:03d}" for i in range(16, 46)],
@@ -27,63 +31,19 @@ ZONE_ROUTE_MAP = {
     "Western Frontier": [f"R{i:03d}" for i in range(286, 301)],
 }
 
+# --------------------------------------------
+# Truck Types
+# --------------------------------------------
 TRUCK_TYPES = ["Container", "LCV", "MCV"]
 
-# ------------------ PAGE CONFIG ------------------
-st.set_page_config(page_title="Vendor RFQ", page_icon="🚛", layout="centered")
+def get_routes(zone):
+    return ZONE_ROUTE_MAP.get(zone, [])
 
-# ------------------ STYLING ------------------
-st.markdown("""
-    <style>
-    html, body, .stApp {
-        padding: 0 !important;
-        margin: 0 !important;
-        height: 100% !important;
-        background: linear-gradient(to right, #f0f8ff, #e1f5fe);
-        background-attachment: fixed;
-    }
-
-    .main {
-        background-color: rgba(255, 255, 255, 0.95);
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        margin-top: 0 !important;
-    }
-
-    .stTextInput > div > div > input,
-    .stSelectbox > div > div > div > select,
-    .stMultiSelect > div > div > div > select {
-        border-radius: 8px;
-        padding: 10px;
-    }
-
-    .stButton > button {
-        background-color: #009688;
-        color: white;
-        font-weight: bold;
-        border-radius: 8px;
-        padding: 12px 25px;
-    }
-
-    header, .stApp > header {
-        visibility: hidden;
-    }
-
-    .css-18e3th9 {
-        padding-top: 0 !important;
-    }
-
-    .thank-you-img {
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-        margin-bottom: 20px;
-    }
-    </style>
-""", unsafe_allow_html=True)
+def get_truck_combos(route, truck_type):
+    return [f"{truck_type} - {route}"]
 
 # ------------------ ADLS FUNCTIONS ------------------
+
 def get_adls_client():
     return DataLakeServiceClient(
         account_url=f"https://{ADLS_ACCOUNT_NAME}.dfs.core.windows.net",
@@ -91,95 +51,113 @@ def get_adls_client():
     )
 
 def append_to_region_file(region: str, df_submission: pd.DataFrame):
-    region = region.lower().replace(" ", "_")
+    region = region.lower().replace(" ", "_")  # Normalize the filename for region
     file_path = f"{region}/submissions.csv"
     adls_client = get_adls_client()
     fs_client = adls_client.get_file_system_client(FILE_SYSTEM_NAME)
     file_client = fs_client.get_file_client(file_path)
 
-    for _ in range(3):
+    for attempt in range(3):
         try:
             if file_client.exists():
-                existing = file_client.download_file().readall()
-                df_existing = pd.read_csv(io.BytesIO(existing))
-                df = pd.concat([df_existing, df_submission], ignore_index=True)
+                existing_data = file_client.download_file().readall()
+                existing_df = pd.read_csv(io.BytesIO(existing_data))
+                combined_df = pd.concat([existing_df, df_submission], ignore_index=True)
             else:
-                df = df_submission
+                combined_df = df_submission
 
             buffer = io.StringIO()
-            df.to_csv(buffer, index=False)
-            file_client.upload_data(io.BytesIO(buffer.getvalue().encode()), overwrite=True)
+            combined_df.to_csv(buffer, index=False)
+            bytes_data = io.BytesIO(buffer.getvalue().encode())
+
+            file_client.upload_data(bytes_data, overwrite=True)
             return True
+
         except Exception as e:
+            print(f"[Attempt {attempt + 1}] ADLS append failed: {e}")
             time.sleep(1)
-    raise Exception("❌ Failed to append after 3 attempts.")
 
-def reset_routes():
-    st.session_state["route_id"] = []
+    raise Exception("❌ Failed to append data after 3 retries.")
 
-# ------------------ THANK YOU SCREEN ------------------
-if st.session_state.get("submitted"):
-    st.markdown("## 🎉 Thank you for your submission!")
-    st.markdown("""
-        <div class="thank-you-img">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHHjEEcoo3KwJ5PTfi2ys6nIQ7K2R8JBoYdw&s" width="300">
-        </div>
-    """, unsafe_allow_html=True)
-    st.success("Your data has been saved successfully. You may now close the tab.")
-    st.stop()
+# ------------------ STREAMLIT UI ------------------
 
-# ------------------ FORM ------------------
-with st.container():
-    st.markdown('<div class="main">', unsafe_allow_html=True)
-    st.title("📦 Vendor Quotation Form")
+# Use some custom CSS to style the app
+st.markdown("""
+    <style>
+        .stButton>button {
+            background-color: #2a9d8f;
+            color: white;
+            font-size: 18px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+        }
+        .stButton>button:hover {
+            background-color: #264653;
+        }
+        .stSelectbox>div>div>input {
+            font-size: 18px;
+            padding: 10px;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        vendor_name = st.text_input("🧾 Company Name", key="vendor_name")
-    with col2:
-        vendor_email = st.text_input("✉️ Email Address", key="vendor_email")
+st.title(" Vendor RFQ Submission")
 
-    if not vendor_name or not vendor_email:
-        st.warning("Please enter your company name and email before continuing.")
-        st.markdown('</div>', unsafe_allow_html=True)
-        st.stop()
+# Handle region change & reset dependent fields
+def reset_route():
+    st.session_state["route_id"] = None
+    st.session_state["truck_type"] = None
 
-    region = st.selectbox("🌍 Select Region", list(ZONE_ROUTE_MAP.keys()), on_change=reset_routes, key="region")
-    route_options = ZONE_ROUTE_MAP.get(region, [])
-    route_ids = st.multiselect("🛣️ Select Route IDs", route_options, key="route_id")
-    truck_types = st.multiselect("🚛 Select Truck Types", TRUCK_TYPES, key="truck_type")
+region = st.selectbox("Select Region", list(ZONE_ROUTE_MAP.keys()), key="region", on_change=reset_route)
 
-    if route_ids and truck_types:
-        st.subheader("📊 Enter Truck Count and Price")
-        combo_data = []
-        for route in route_ids:
-            for truck in truck_types:
-                col1, col2 = st.columns(2)
-                with col1:
-                    count = st.number_input(f"{truck} | {route} | Count", min_value=0, key=f"{route}_{truck}_count")
-                with col2:
-                    price = st.number_input(f"{truck} | {route} | Price", min_value=0.0, key=f"{route}_{truck}_price")
-                combo_data.append({
-                    "vendor_name": vendor_name,
-                    "vendor_email": vendor_email,
-                    "region": region,
-                    "route_id": route,
-                    "truck_type": truck,
-                    "truck_count": count,
-                    "price": price,
-                    "submitted_at": pd.Timestamp.now()
-                })
+if region:
+    route_options = get_routes(region)
+    route_ids = st.multiselect("Select Route IDs", route_options, key="route_id")
 
-        if st.button("✅ Submit Quotation"):
+truck_types = st.multiselect("Select Truck Types", TRUCK_TYPES, key="truck_types")
+
+# Form fields appear when route + truck type are selected
+if st.session_state.get("route_id") and st.session_state.get("truck_type"):
+    st.subheader("📝 Fill Truck Details")
+
+    combo_data = []
+    for route in route_ids:
+        for truck_type in truck_types:
+            count = st.number_input(f"{truck_type} - {route} - Truck Count", min_value=0, key=f"{route}_{truck_type}_count")
+            price = st.number_input(f"{truck_type} - {route} - Price", min_value=0.0, key=f"{route}_{truck_type}_price")
+            combo_data.append({"route_id": route,
+                               "truck_type": truck_type,
+                               "combo": f"{truck_type} - {route}",
+                               "truck_count": count,
+                               "price": price})
+
+    vendor_name = st.text_input("Your Company Name", key="vendor_name")
+
+    if st.button("Submit Response"):
+        if not vendor_name:
+            st.error("Please enter your company name.")
+        else:
+            submission_df = pd.DataFrame(combo_data)
+            submission_df["region"] = region
+            submission_df["vendor_name"] = vendor_name
+            submission_df["submitted_at"] = pd.Timestamp.now()
+
             try:
-                df_submission = pd.DataFrame(combo_data)
-                append_to_region_file(region, df_submission)
-                st.success("Submitted successfully!")
-                st.session_state["submitted"] = True
-                st.rerun()
+                append_to_region_file(region, submission_df)
+                st.success("✅ Response submitted successfully!")
+                st.balloons()  # Optional: Show balloons for fun
+                st.rerun()  # Refresh the page
+                st.session_state["submitted"] = True  # Track submission status
             except Exception as e:
-                st.error(f"❌ Upload failed: {e}")
-    st.markdown('</div>', unsafe_allow_html=True)
+                st.error(f"❌ Error uploading to ADLS: {e}")
+
+# Show Thank You page if submission is successful
+if "submitted" in st.session_state and st.session_state["submitted"]:
+    st.header("🎉 Thank You for Your Submission!")
+    st.write("Your response has been successfully submitted and will be processed.")
+    st.write("You can close this window or fill another form.")
+    st.session_state["submitted"] = False  # Reset submission status after showing thank you message
 
 
 
