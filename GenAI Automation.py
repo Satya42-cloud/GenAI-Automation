@@ -59,12 +59,6 @@ st.markdown("""
         border-radius: 8px;
         padding: 12px 25px;
     }
-    .top-right-logo {
-        position: fixed;
-        top: 15px;
-        right: 15px;
-        z-index: 9999;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -102,15 +96,9 @@ def append_to_region_file(region: str, df_submission: pd.DataFrame):
 def reset_routes():
     st.session_state["route_id"] = []
 
-# ------------------ LOGO IN TOP-RIGHT ------------------
-st.markdown(
-    '<img class="top-right-logo" src="https://quantum-i.ai/wp-content/uploads/2024/11/Quantum-i_Main_Logo_V1_60.png" width="110">',
-    unsafe_allow_html=True
-)
-
 # ------------------ THANK YOU SCREEN ------------------
 if st.session_state.get("submitted"):
-    st.image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSLdIRKMZQDaHaWoaOeelSlj7TtP3Zs57xEMw&s", width=500)
+    st.image("https://cached.pauloxmanpublishing.com/RS/SR/product/55/pm9_L_2985bce1.jpg", width=500)
     st.markdown("## 🎉 Thank you for your submission!")
     st.success("Your data has been saved successfully. You may now close the tab.")
     st.stop()
@@ -167,5 +155,6 @@ with st.container():
             except Exception as e:
                 st.error(f"❌ Upload failed: {e}")
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
