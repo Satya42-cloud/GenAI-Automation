@@ -118,7 +118,6 @@ if st.session_state.get("submitted"):
 
 # ------------------ FORM ------------------
 with st.container():
-    st.markdown('<div class="main">', unsafe_allow_html=True)
     st.title("📦 Vendor Quotation Form")
 
     col1, col2 = st.columns(2)
