@@ -30,33 +30,31 @@ ZONE_ROUTE_MAP = {
 TRUCK_TYPES = ["Container", "LCV", "MCV"]
 
 # ------------------ PAGE CONFIG ------------------
-st.set_page_config(page_title="Vendor RFQ", page_icon="🚛", layout="wide")
+st.set_page_config(page_title="Vendor RFQ", page_icon="🚛", layout="centered")
 
 # ------------------ STYLING ------------------
 st.markdown("""
     <style>
-    html, body, .stApp {
-        margin: 0 !important;
-        padding: 0 !important;
-        height: 100% !important;
+    .stApp {
         background: linear-gradient(to right, #f0f8ff, #e1f5fe);
+        background-attachment: fixed;
+        height: 100vh;
+        padding-top: 0 !important;
+        margin-top: -60px;
     }
-
     .main {
         background-color: rgba(255, 255, 255, 0.95);
         padding: 2rem;
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        margin-top: 0 !important;
+        margin-top: 40px;
     }
-
     .stTextInput > div > div > input,
     .stSelectbox > div > div > div > select,
     .stMultiSelect > div > div > div > select {
         border-radius: 8px;
         padding: 10px;
     }
-
     .stButton > button {
         background-color: #009688;
         color: white;
@@ -64,21 +62,15 @@ st.markdown("""
         border-radius: 8px;
         padding: 12px 25px;
     }
-
-    header, .stApp > header {
-        visibility: hidden;
-        height: 0px !important;
-    }
-
-    .css-18e3th9, .block-container {
-        padding-top: 0 !important;
-    }
-
-    .thank-you-img {
+    header {visibility: hidden;}
+    .stApp > header {visibility: hidden;}
+    .css-1v0mbdj {display: none;}
+    .st-bm {padding-top: 0;}
+    .center-img {
         display: flex;
         justify-content: center;
-        margin-top: 20px;
-        margin-bottom: 20px;
+        margin-top: 30px;
+        margin-bottom: 30px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -120,11 +112,7 @@ def reset_routes():
 # ------------------ THANK YOU SCREEN ------------------
 if st.session_state.get("submitted"):
     st.markdown("## 🎉 Thank you for your submission!")
-    st.markdown(
-        '<div class="thank-you-img">'
-        '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHHjEEcoo3KwJ5PTfi2ys6nIQ7K2R8JBoYdw&s" width="300">'
-        '</div>', unsafe_allow_html=True
-    )
+    st.markdown('<div class="center-img"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHHjEEcoo3KwJ5PTfi2ys6nIQ7K2R8JBoYdw&s" width="300"></div>', unsafe_allow_html=True)
     st.success("Your data has been saved successfully. You may now close the tab.")
     st.stop()
 
@@ -147,6 +135,11 @@ with st.container():
     region = st.selectbox("🌍 Select Region", list(ZONE_ROUTE_MAP.keys()), on_change=reset_routes, key="region")
     route_options = ZONE_ROUTE_MAP.get(region, [])
     route_ids = st.multiselect("🛣️ Select Route IDs", route_options, key="route_id")
+
+    # Safely initialize truck_type session state
+    if "truck_type" in st.session_state and not isinstance(st.session_state["truck_type"], list):
+        st.session_state["truck_type"] = []
+
     truck_types = st.multiselect("🚛 Select Truck Types", TRUCK_TYPES, key="truck_type")
 
     if route_ids and truck_types:
@@ -179,7 +172,9 @@ with st.container():
                 st.rerun()
             except Exception as e:
                 st.error(f"❌ Upload failed: {e}")
+
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
