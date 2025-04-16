@@ -83,21 +83,25 @@ def get_adls_client():
     )
 
 def append_to_region_file(region: str, df_submission: pd.DataFrame):
-    region = region.lower().replace(" ", "_")
-    file_path = f"{region}/submissions.csv"
+    # Create the folder path as 'vendor_response/submissions.csv'
+    file_path = f"vendor_response/submissions.csv"
     adls_client = get_adls_client()
     fs_client = adls_client.get_file_system_client(FILE_SYSTEM_NAME)
     file_client = fs_client.get_file_client(file_path)
 
     for _ in range(3):
         try:
+            # Check if the file already exists
             if file_client.exists():
+                # If exists, download and append the new data
                 existing = file_client.download_file().readall()
                 df_existing = pd.read_csv(io.BytesIO(existing))
                 df = pd.concat([df_existing, df_submission], ignore_index=True)
             else:
+                # If the file doesn't exist, start with the new data
                 df = df_submission
 
+            # Convert the dataframe to CSV and upload to ADLS
             buffer = io.StringIO()
             df.to_csv(buffer, index=False)
             file_client.upload_data(io.BytesIO(buffer.getvalue().encode()), overwrite=True)
@@ -159,6 +163,7 @@ with st.container():
                     "truck_type": truck,
                     "truck_count": count,
                     "price": price,
+                    "total_amount": count * price,  # Add total amount calculation
                     "submitted_at": pd.Timestamp.now()
                 })
 
