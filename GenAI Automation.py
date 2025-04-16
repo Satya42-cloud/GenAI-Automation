@@ -133,7 +133,6 @@ with st.container():
     route_options = ZONE_ROUTE_MAP.get(region, [])
     route_ids = st.multiselect("🛣️ Select Route IDs", route_options, key="route_id")
 
-    # Safely initialize truck_type session state
     if "truck_type" in st.session_state and not isinstance(st.session_state["truck_type"], list):
         st.session_state["truck_type"] = []
 
@@ -150,6 +149,8 @@ with st.container():
                 with col2:
                     price = st.number_input(f"{truck} | {route} | Price per Truck", min_value=0.0, key=f"{route}_{truck}_price")
                 total_cost = count * price
+                st.markdown(f"**💰 Total Cost for {truck} on {route}: ₹{total_cost:,.2f}**")
+
                 combo_data.append({
                     "Vendor Name": vendor_name,
                     "Vendor Email": vendor_email,
