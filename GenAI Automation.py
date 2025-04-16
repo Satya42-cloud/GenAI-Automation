@@ -4,32 +4,7 @@ import io
 import time
 from azure.storage.filedatalake import DataLakeServiceClient
 
-# ------------------ CONFIG ------------------
-ADLS_ACCOUNT_NAME = "genaiautomationsa"
-ADLS_ACCOUNT_KEY = "vwwQ7uleP291h6A0NjsAdSAlUmlXW2qUipCvynul27mgrDjEqH7ofshn4GstabN6aj78c/DVQnLp+ASt7vdksg=="
-FILE_SYSTEM_NAME = "vendor-rfq"
-
-ZONE_ROUTE_MAP = {
-    "Andhra Region": [f"R{i:03d}" for i in range(1, 16)],
-    "Bihar Plateau": [f"R{i:03d}" for i in range(16, 46)],
-    "Capital Belt": [f"R{i:03d}" for i in range(46, 71)],
-    "Deccan West": [f"R{i:03d}" for i in range(71, 91)],
-    "Eastern Seaboard": [f"R{i:03d}" for i in range(91, 131)],
-    "Ganga Plains": [f"R{i:03d}" for i in range(131, 161)],
-    "Himalayan North": [f"R{i:03d}" for i in range(161, 171)],
-    "Konkan South": [f"R{i:03d}" for i in range(171, 186)],
-    "Malabar Coast": [f"R{i:03d}" for i in range(186, 206)],
-    "North East": [f"R{i:03d}" for i in range(206, 221)],
-    "Northwest Heartland": [f"R{i:03d}" for i in range(221, 236)],
-    "Telangana Region": [f"R{i:03d}" for i in range(236, 246)],
-    "Uttarakhand Highlands": [f"R{i:03d}" for i in range(246, 256)],
-    "Vindhya Plateau": [f"R{i:03d}" for i in range(256, 286)],
-    "Western Frontier": [f"R{i:03d}" for i in range(286, 301)],
-}
-
-TRUCK_TYPES = ["Container", "LCV", "MCV"]
-
-# ------------------ PAGE CONFIG (must be first Streamlit command) ------------------
+# ------------------ PAGE CONFIG ------------------
 st.set_page_config(page_title="Vendor RFQ", page_icon="🚛", layout="centered")
 
 # ------------------ STYLING ------------------
@@ -75,6 +50,31 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# ------------------ CONFIG ------------------
+ADLS_ACCOUNT_NAME = "genaiautomationsa"
+ADLS_ACCOUNT_KEY = "vwwQ7uleP291h6A0NjsAdSAlUmlXW2qUipCvynul27mgrDjEqH7ofshn4GstabN6aj78c/DVQnLp+ASt7vdksg=="
+FILE_SYSTEM_NAME = "vendor-rfq"
+
+ZONE_ROUTE_MAP = {
+    "Andhra Region": [f"R{i:03d}" for i in range(1, 16)],
+    "Bihar Plateau": [f"R{i:03d}" for i in range(16, 46)],
+    "Capital Belt": [f"R{i:03d}" for i in range(46, 71)],
+    "Deccan West": [f"R{i:03d}" for i in range(71, 91)],
+    "Eastern Seaboard": [f"R{i:03d}" for i in range(91, 131)],
+    "Ganga Plains": [f"R{i:03d}" for i in range(131, 161)],
+    "Himalayan North": [f"R{i:03d}" for i in range(161, 171)],
+    "Konkan South": [f"R{i:03d}" for i in range(171, 186)],
+    "Malabar Coast": [f"R{i:03d}" for i in range(186, 206)],
+    "North East": [f"R{i:03d}" for i in range(206, 221)],
+    "Northwest Heartland": [f"R{i:03d}" for i in range(221, 236)],
+    "Telangana Region": [f"R{i:03d}" for i in range(236, 246)],
+    "Uttarakhand Highlands": [f"R{i:03d}" for i in range(246, 256)],
+    "Vindhya Plateau": [f"R{i:03d}" for i in range(256, 286)],
+    "Western Frontier": [f"R{i:03d}" for i in range(286, 301)],
+}
+
+TRUCK_TYPES = ["Container", "LCV", "MCV"]
+
 # ------------------ ADLS FUNCTIONS ------------------
 def get_adls_client():
     return DataLakeServiceClient(
@@ -82,9 +82,8 @@ def get_adls_client():
         credential=ADLS_ACCOUNT_KEY
     )
 
-def append_to_region_file(region: str, df_submission: pd.DataFrame):
-    folder_name = "vendor_response"
-    file_path = f"{folder_name}/quotation.csv"
+def append_to_quotation_file(df_submission: pd.DataFrame):
+    file_path = "vendor_response/quotation.csv"
     adls_client = get_adls_client()
     fs_client = adls_client.get_file_system_client(FILE_SYSTEM_NAME)
     file_client = fs_client.get_file_client(file_path)
@@ -102,7 +101,7 @@ def append_to_region_file(region: str, df_submission: pd.DataFrame):
             df.to_csv(buffer, index=False)
             file_client.upload_data(io.BytesIO(buffer.getvalue().encode()), overwrite=True)
             return True
-        except Exception:
+        except Exception as e:
             time.sleep(1)
     raise Exception("❌ Failed to append after 3 attempts.")
 
@@ -122,7 +121,7 @@ with st.container():
 
     col1, col2 = st.columns(2)
     with col1:
-        vendor_name = st.text_input("📟 Company Name", key="vendor_name")
+        vendor_name = st.text_input("🧾 Company Name", key="vendor_name")
     with col2:
         vendor_email = st.text_input("✉️ Email Address", key="vendor_email")
 
@@ -132,7 +131,7 @@ with st.container():
 
     region = st.selectbox("🌍 Select Region", list(ZONE_ROUTE_MAP.keys()), on_change=reset_routes, key="region")
     route_options = ZONE_ROUTE_MAP.get(region, [])
-    route_ids = st.multiselect("🚣️ Select Route IDs", route_options, key="route_id")
+    route_ids = st.multiselect("🛣️ Select Route IDs", route_options, key="route_id")
 
     if "truck_type" in st.session_state and not isinstance(st.session_state["truck_type"], list):
         st.session_state["truck_type"] = []
@@ -142,17 +141,15 @@ with st.container():
     if route_ids and truck_types:
         st.subheader("📊 Enter Truck Count and Price")
         combo_data = []
-
         for route in route_ids:
             for truck in truck_types:
-                col1, col2, col3 = st.columns([1, 1, 1])
+                col1, col2 = st.columns(2)
                 with col1:
                     count = st.number_input(f"{truck} | {route} | Count", min_value=0, key=f"{route}_{truck}_count")
                 with col2:
                     price = st.number_input(f"{truck} | {route} | Price per Truck", min_value=0.0, key=f"{route}_{truck}_price")
                 total_cost = count * price
-                with col3:
-                    st.markdown(f"### ₹{total_cost:,.2f}")
+                st.markdown(f"**💰 Total Cost for {truck} on {route}: ₹{total_cost:,.2f}**")
 
                 combo_data.append({
                     "Vendor Name": vendor_name,
@@ -169,7 +166,7 @@ with st.container():
         if st.button("✅ Submit Quotation"):
             try:
                 df_submission = pd.DataFrame(combo_data)
-                append_to_region_file(region, df_submission)
+                append_to_quotation_file(df_submission)
                 st.success("Submitted successfully!")
                 st.session_state["submitted"] = True
                 st.rerun()
