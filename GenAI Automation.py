@@ -145,9 +145,9 @@ with st.container():
             for truck in truck_types:
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    count = st.number_input(f"{truck} | {route} | Count", min_value=0, key=f"{route}_{truck}_count", on_change=None)
+                    count = st.number_input(f"{truck} | {route} | Count", min_value=0, step=10, key=f"{route}_{truck}_count", on_change=None)
                 with col2:
-                    price = st.number_input(f"{truck} | {route} | Price per Truck", min_value=0.0, key=f"{route}_{truck}_price", on_change=None)
+                    price = st.number_input(f"{truck} | {route} | Price per Truck", min_value=0.0, step=500, key=f"{route}_{truck}_price", on_change=None)
                 total_cost = count * price
 
                 # Display Total Cost automatically
@@ -175,6 +175,7 @@ with st.container():
                 st.rerun()
             except Exception as e:
                 st.error(f"❌ Upload failed: {e}")
+
 
 
 
