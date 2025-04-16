@@ -4,6 +4,9 @@ import io
 import time
 from azure.storage.filedatalake import DataLakeServiceClient
 
+# ------------------ PAGE CONFIG ------------------
+st.set_page_config(page_title="Vendor RFQ", page_icon="🚛", layout="centered")
+
 # ------------------ STYLING ------------------
 st.markdown("""
     <style>
@@ -72,8 +75,6 @@ ZONE_ROUTE_MAP = {
 
 TRUCK_TYPES = ["Container", "LCV", "MCV"]
 
-st.set_page_config(page_title="Vendor RFQ", page_icon="🚛", layout="centered")
-
 # ------------------ ADLS FUNCTIONS ------------------
 def get_adls_client():
     return DataLakeServiceClient(
@@ -81,7 +82,7 @@ def get_adls_client():
         credential=ADLS_ACCOUNT_KEY
     )
 
-def append_to_vendor_response_file(df_submission: pd.DataFrame):
+def append_to_quotation_file(df_submission: pd.DataFrame):
     file_path = "vendor_response/quotation.csv"
     adls_client = get_adls_client()
     fs_client = adls_client.get_file_system_client(FILE_SYSTEM_NAME)
@@ -111,65 +112,66 @@ def reset_routes():
 if st.session_state.get("submitted"):
     st.markdown("## 🎉 Thank you for your submission!")
     st.markdown('<div class="center-img"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHHjEEcoo3KwJ5PTfi2ys6nIQ7K2R8JBoYdw&s" width="300"></div>', unsafe_allow_html=True)
-    st.success("Your data has been saved successfully.")
+    st.success("Your data has been saved successfully. You may now close the tab.")
     st.stop()
 
 # ------------------ FORM ------------------
-st.title("🚛 Vendor Quotation Form")
+with st.container():
+    st.title("🚛 Vendor Quotation Form")
 
-col1, col2 = st.columns(2)
-with col1:
-    vendor_name = st.text_input("🧾 Company Name", key="vendor_name")
-with col2:
-    vendor_email = st.text_input("✉️ Email Address", key="vendor_email")
+    col1, col2 = st.columns(2)
+    with col1:
+        vendor_name = st.text_input("🧾 Company Name", key="vendor_name")
+    with col2:
+        vendor_email = st.text_input("✉️ Email Address", key="vendor_email")
 
-if not vendor_name or not vendor_email:
-    st.warning("Please enter your company name and email before continuing.")
-    st.stop()
+    if not vendor_name or not vendor_email:
+        st.warning("Please enter your company name and email before continuing.")
+        st.stop()
 
-region = st.selectbox("🌍 Select Region", list(ZONE_ROUTE_MAP.keys()), on_change=reset_routes, key="region")
-route_options = ZONE_ROUTE_MAP.get(region, [])
-route_ids = st.multiselect("🛣️ Select Route IDs", route_options, key="route_id")
+    region = st.selectbox("🌍 Select Region", list(ZONE_ROUTE_MAP.keys()), on_change=reset_routes, key="region")
+    route_options = ZONE_ROUTE_MAP.get(region, [])
+    route_ids = st.multiselect("🛣️ Select Route IDs", route_options, key="route_id")
 
-if "truck_type" in st.session_state and not isinstance(st.session_state["truck_type"], list):
-    st.session_state["truck_type"] = []
+    # Safely initialize truck_type session state
+    if "truck_type" in st.session_state and not isinstance(st.session_state["truck_type"], list):
+        st.session_state["truck_type"] = []
 
-truck_types = st.multiselect("🚛 Select Truck Types", TRUCK_TYPES, key="truck_type")
+    truck_types = st.multiselect("🚛 Select Truck Types", TRUCK_TYPES, key="truck_type")
 
-if route_ids and truck_types:
-    st.subheader("📊 Enter Truck Count and Price")
-    combo_data = []
+    if route_ids and truck_types:
+        st.subheader("📊 Enter Truck Count and Price")
+        combo_data = []
+        for route in route_ids:
+            for truck in truck_types:
+                col1, col2 = st.columns(2)
+                with col1:
+                    count = st.number_input(f"{truck} | {route} | Count", min_value=0, key=f"{route}_{truck}_count")
+                with col2:
+                    price = st.number_input(f"{truck} | {route} | Price per Truck", min_value=0.0, key=f"{route}_{truck}_price")
+                total_cost = count * price
+                combo_data.append({
+                    "Vendor Name": vendor_name,
+                    "Vendor Email": vendor_email,
+                    "Region": region,
+                    "Route ID": route,
+                    "Truck Type": truck,
+                    "Count": count,
+                    "Price per Truck": price,
+                    "Total Cost": total_cost,
+                    "Submitted At": pd.Timestamp.now()
+                })
 
-    for route in route_ids:
-        for truck in truck_types:
-            col1, col2 = st.columns(2)
-            with col1:
-                count = st.number_input(f"{truck} | {route} | Count", min_value=0, key=f"{route}_{truck}_count")
-            with col2:
-                price = st.number_input(f"{truck} | {route} | Price per Truck", min_value=0.0, key=f"{route}_{truck}_price")
-            total_cost = count * price
+        if st.button("✅ Submit Quotation"):
+            try:
+                df_submission = pd.DataFrame(combo_data)
+                append_to_quotation_file(df_submission)
+                st.success("Submitted successfully!")
+                st.session_state["submitted"] = True
+                st.rerun()
+            except Exception as e:
+                st.error(f"❌ Upload failed: {e}")
 
-            combo_data.append({
-                "Vendor Name": vendor_name,
-                "Vendor Email": vendor_email,
-                "Region": region,
-                "Route ID": route,
-                "Truck Type": truck,
-                "Count": count,
-                "Price per Truck": price,
-                "Total Cost": total_cost,
-                "Submitted At": pd.Timestamp.now()
-            })
-
-    if st.button("✅ Submit Quotation"):
-        try:
-            df_submission = pd.DataFrame(combo_data)
-            append_to_vendor_response_file(df_submission)
-            st.success("Submitted successfully!")
-            st.session_state["submitted"] = True
-            st.rerun()
-        except Exception as e:
-            st.error(f"❌ Upload failed: {e}")
 
 
 
