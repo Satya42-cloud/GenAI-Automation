@@ -143,16 +143,13 @@ with st.container():
         combo_data = []
         for route in route_ids:
             for truck in truck_types:
-                col1, col2, col3 = st.columns(3)
+                col1, col2 = st.columns(2)
                 with col1:
-                    count = st.number_input(f"{truck} | {route} | Count", min_value=0, step=10, key=f"{route}_{truck}_count", on_change=None)
+                    count = st.number_input(f"{truck} | {route} | Count", min_value=0, step=10, key=f"{route}_{truck}_count")
                 with col2:
-                    price = st.number_input(f"{truck} | {route} | Price per Truck", min_value=0.0, step=500, key=f"{route}_{truck}_price", on_change=None)
+                    price = st.number_input(f"{truck} | {route} | Price per Truck", min_value=0.0, step=500.0, key=f"{route}_{truck}_price")
                 total_cost = count * price
-
-                # Display Total Cost automatically
-                with col3:
-                    st.write(f"**💰 Total Cost:** ₹{total_cost:,.2f}")
+                st.markdown(f"**💰 Total Cost for {truck} on {route}: ₹{total_cost:,.2f}**")
 
                 combo_data.append({
                     "Vendor Name": vendor_name,
@@ -175,6 +172,7 @@ with st.container():
                 st.rerun()
             except Exception as e:
                 st.error(f"❌ Upload failed: {e}")
+
 
 
 
