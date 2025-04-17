@@ -109,8 +109,8 @@ def append_to_quotation_file(df_submission: pd.DataFrame):
 
                 # Drop previous records for this vendor (by name and email)
                 df_existing = df_existing[~(
-                    (df_existing["vendor name"].str.lower() == df_submission["vendor name"].iloc[0].lower()) & 
-                    (df_existing["vendor email"].str.lower() == df_submission["vendor email"].iloc[0].lower())
+                    (df_existing["Vendor Name"] == df_submission["Vendor Name"].iloc[0]) & 
+                    (df_existing["Vendor Email"] == df_submission["Vendor Email"].iloc[0])
                 )]
 
                 # Append the new data
@@ -118,12 +118,12 @@ def append_to_quotation_file(df_submission: pd.DataFrame):
             else:
                 df = df_submission
 
-            # Convert all form data to lowercase, except for the headers
-            df_lowered = df.applymap(lambda x: x.lower() if isinstance(x, str) else x)
+            # Convert all form data to lowercase
+            df = df.applymap(lambda x: x.lower() if isinstance(x, str) else x)
 
             # Upload updated data (save in lowercase)
             buffer = io.StringIO()
-            df_lowered.to_csv(buffer, index=False)
+            df.to_csv(buffer, index=False)
             file_client.upload_data(io.BytesIO(buffer.getvalue().encode()), overwrite=True)
             return True
 
@@ -192,20 +192,22 @@ with st.container():
                 st.markdown(f"**💰 Total Cost for {truck} on {route}: ₹{total_cost:,.2f}**")
 
                 combo_data.append({
-                    "vendor name": vendor_name,
-                    "vendor email": vendor_email,
-                    "region": region,
-                    "route id": route,
-                    "truck type": truck,
-                    "count": required_count,
-                    "price per truck": price,
-                    "total cost": total_cost,
-                    "submitted at": pd.Timestamp.now()
+                    "Vendor Name": vendor_name,
+                    "Vendor Email": vendor_email,
+                    "Region": region,
+                    "Route ID": route,
+                    "Truck Type": truck,
+                    "Count": required_count,
+                    "Price per Truck": price,
+                    "Total Cost": total_cost,
+                    "Submitted At": pd.Timestamp.now()
                 })
 
         if st.button("✅ Submit Quotation"):
             try:
                 df_submission = pd.DataFrame(combo_data)
+
+                # Save the data with proper column names
                 append_to_quotation_file(df_submission)
                 st.success("Submitted successfully!")
                 st.session_state["submitted"] = True
