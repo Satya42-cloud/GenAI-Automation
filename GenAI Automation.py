@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as st 
 import pandas as pd
 import io
 import time
@@ -118,8 +118,10 @@ def append_to_quotation_file(df_submission: pd.DataFrame):
             else:
                 df = df_submission
 
-            # Upload updated data (save in lowercase)
+            # Convert column names to lowercase here
             df.columns = [col.lower() for col in df.columns]  # Ensure lowercase column names
+
+            # Upload updated data (save in lowercase)
             buffer = io.StringIO()
             df.to_csv(buffer, index=False)
             file_client.upload_data(io.BytesIO(buffer.getvalue().encode()), overwrite=True)
@@ -171,7 +173,7 @@ with st.container():
         for route in route_ids:
             for truck in truck_types:
                 # Get the truck count based on the route and truck type
-                matching_row = truck_data[
+                matching_row = truck_data[ 
                     (truck_data["Route_ID"] == route) & 
                     (truck_data["Truck_Type"] == truck)
                 ]
@@ -210,6 +212,7 @@ with st.container():
                 st.rerun()
             except Exception as e:
                 st.error(f"❌ Upload failed: {e}")
+
 
 
 
