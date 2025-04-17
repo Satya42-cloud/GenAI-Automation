@@ -97,7 +97,7 @@ def overwrite_quotation_file(df_submission: pd.DataFrame):
     fs_client = adls_client.get_file_system_client(FILE_SYSTEM_NAME)
     file_client = fs_client.get_file_client(file_path)
 
-    for _ in range(3):
+    for _ in range(10):
         try:
             if file_client.exists():
                 existing = file_client.download_file().readall()
@@ -133,7 +133,7 @@ def overwrite_quotation_file(df_submission: pd.DataFrame):
         except Exception as e:
             time.sleep(1)
 
-    raise Exception("❌ Failed to overwrite after 3 attempts.")
+    raise Exception("❌ Failed to overwrite after 10 attempts.")
 
 def reset_routes():
     st.session_state["route_id"] = []
