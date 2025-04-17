@@ -82,33 +82,6 @@ def get_adls_client():
         credential=ADLS_ACCOUNT_KEY
     )
 
-def get_required_truck_count(region, route_id, truck_type):
-    # Load region_vendor_summary.csv from ADLS and filter based on region, route_id, and truck_type
-    adls_client = get_adls_client()
-    fs_client = adls_client.get_file_system_client(FILE_SYSTEM_NAME)
-    file_client = fs_client.get_file_client("region_vendor_summary.csv")
-
-    try:
-        # If file exists, load it
-        if file_client.exists():
-            file_content = file_client.download_file().readall()
-            df = pd.read_csv(io.BytesIO(file_content))
-
-            # Filter by region, route_id, and truck_type
-            filtered_data = df[
-                (df["Region"] == region) & 
-                (df["Route_ID"] == route_id) & 
-                (df["Truck_Type"] == truck_type)
-            ]
-
-            if not filtered_data.empty:
-                return filtered_data["Required_Truck"].iloc[0]
-            else:
-                return 0
-    except Exception as e:
-        print(f"Error loading required truck count: {e}")
-    return 0
-
 def append_to_quotation_file(df_submission: pd.DataFrame):
     file_path = "vendor_response/quotation.csv"
     adls_client = get_adls_client()
@@ -122,10 +95,10 @@ def append_to_quotation_file(df_submission: pd.DataFrame):
                 existing = file_client.download_file().readall()
                 df_existing = pd.read_csv(io.BytesIO(existing))
 
-                # Drop previous records for this vendor
+                # Drop previous records for this vendor (by name and email)
                 df_existing = df_existing[~(
-                    (df_existing["Vendor Name"] == df_submission["Vendor Name"].iloc[0]) & 
-                    (df_existing["Vendor Email"] == df_submission["Vendor Email"].iloc[0])
+                    (df_existing["vendor name"] == df_submission["vendor name"].iloc[0]) & 
+                    (df_existing["vendor email"] == df_submission["vendor email"].iloc[0])
                 )]
 
                 # Append the new data
@@ -133,10 +106,8 @@ def append_to_quotation_file(df_submission: pd.DataFrame):
             else:
                 df = df_submission
 
-            # Convert all column names to lowercase
-            df.columns = map(str.lower, df.columns)
-
-            # Upload updated data
+            # Upload updated data (save in lowercase)
+            df.columns = [col.lower() for col in df.columns]  # Ensure lowercase column names
             buffer = io.StringIO()
             df.to_csv(buffer, index=False)
             file_client.upload_data(io.BytesIO(buffer.getvalue().encode()), overwrite=True)
@@ -182,30 +153,42 @@ with st.container():
 
     if route_ids and truck_types:
         st.subheader("📊 Enter Truck Count and Price")
+
+        # Load the truck data from the local file
+        truck_data = pd.read_csv(r"C:\Users\sswain_quantum-i\OneDrive\Desktop\Truck Procurement (Gen AI)\region_vendor_summary.csv")
+
         combo_data = []
         for route in route_ids:
             for truck in truck_types:
-                # Get the required truck count from ADLS for each truck type and route
-                required_count = get_required_truck_count(region, route, truck)
+                # Get the truck count based on the route and truck type
+                matching_row = truck_data[
+                    (truck_data["Route_ID"] == route) & 
+                    (truck_data["Truck_Type"] == truck)
+                ]
+
+                if not matching_row.empty:
+                    required_count = matching_row["Required_Truck"].iloc[0]
+                else:
+                    required_count = 0  # Default value if no match is found
 
                 col1, col2 = st.columns(2)
                 with col1:
-                    count = st.number_input(f"{truck} | {route} | Count", min_value=0, step=10, value=required_count, key=f"{route}_{truck}_count")
+                    st.number_input(f"{truck} | {route} | Count", value=required_count, min_value=0, step=10, key=f"{route}_{truck}_count")
                 with col2:
                     price = st.number_input(f"{truck} | {route} | Price per Truck", min_value=0.0, step=500.0, key=f"{route}_{truck}_price")
-                total_cost = count * price
+                total_cost = required_count * price
                 st.markdown(f"**💰 Total Cost for {truck} on {route}: ₹{total_cost:,.2f}**")
 
                 combo_data.append({
-                    "Vendor Name": vendor_name,
-                    "Vendor Email": vendor_email,
-                    "Region": region,
-                    "Route ID": route,
-                    "Truck Type": truck,
-                    "Count": count,
-                    "Price per Truck": price,
-                    "Total Cost": total_cost,
-                    "Submitted At": pd.Timestamp.now()
+                    "vendor name": vendor_name,
+                    "vendor email": vendor_email,
+                    "region": region,
+                    "route id": route,
+                    "truck type": truck,
+                    "count": required_count,
+                    "price per truck": price,
+                    "total cost": total_cost,
+                    "submitted at": pd.Timestamp.now()
                 })
 
         if st.button("✅ Submit Quotation"):
@@ -217,6 +200,7 @@ with st.container():
                 st.rerun()
             except Exception as e:
                 st.error(f"❌ Upload failed: {e}")
+
 
 
 
