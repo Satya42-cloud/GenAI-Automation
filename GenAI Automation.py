@@ -94,7 +94,7 @@ def read_csv_from_adls(file_path):
     df = pd.read_csv(io.BytesIO(downloaded_bytes))
     return df
 
-def append_to_quotation_file(df_submission: pd.DataFrame):
+def overwrite_quotation_file(df_submission: pd.DataFrame):
     file_path = "vendor_response/quotation.csv"
     adls_client = get_adls_client()
     fs_client = adls_client.get_file_system_client(FILE_SYSTEM_NAME)
@@ -109,7 +109,6 @@ def append_to_quotation_file(df_submission: pd.DataFrame):
 
                 # Drop previous records for this vendor (by name and email)
                 df_existing = df_existing[~(
-                    (df_existing["Vendor Name"] == df_submission["Vendor Name"].iloc[0]) & 
                     (df_existing["Vendor Email"] == df_submission["Vendor Email"].iloc[0])
                 )]
 
@@ -131,7 +130,7 @@ def append_to_quotation_file(df_submission: pd.DataFrame):
         except Exception as e:
             time.sleep(1)
 
-    raise Exception("❌ Failed to append after 3 attempts.")
+    raise Exception("❌ Failed to overwrite after 3 attempts.")
 
 def reset_routes():
     st.session_state["route_id"] = []
@@ -207,7 +206,7 @@ with st.container():
         if st.button("✅ Submit Quotation"):
             try:
                 df_submission = pd.DataFrame(combo_data)
-                append_to_quotation_file(df_submission)
+                overwrite_quotation_file(df_submission)
                 st.success("Submitted successfully!")
                 st.session_state["submitted"] = True
                 st.rerun()
