@@ -54,7 +54,7 @@ st.markdown("""
 ADLS_ACCOUNT_NAME = "genaiautomationsa"
 ADLS_ACCOUNT_KEY = "vwwQ7uleP291h6A0NjsAdSAlUmlXW2qUipCvynul27mgrDjEqH7ofshn4GstabN6aj78c/DVQnLp+ASt7vdksg=="
 FILE_SYSTEM_NAME = "vendor-rfq"
-FILE_PATH = "truck_summary/region_vendor_summary.csv"  # ADLS file path for the CSV
+FILE_PATH = "truck_summary/region_vendor_summary.csv"
 
 ZONE_ROUTE_MAP = {
     "Andhra Region": [f"R{i:03d}" for i in range(1, 16)],
@@ -87,12 +87,9 @@ def read_csv_from_adls(file_path):
     adls_client = get_adls_client()
     fs_client = adls_client.get_file_system_client(FILE_SYSTEM_NAME)
     file_client = fs_client.get_file_client(file_path)
-
-    # Read CSV from ADLS
     download = file_client.download_file()
     downloaded_bytes = download.readall()
-    df = pd.read_csv(io.BytesIO(downloaded_bytes))
-    return df
+    return pd.read_csv(io.BytesIO(downloaded_bytes))
 
 def overwrite_quotation_file(df_submission: pd.DataFrame):
     file_path = "vendor_response/quotation.csv"
@@ -102,26 +99,32 @@ def overwrite_quotation_file(df_submission: pd.DataFrame):
 
     for _ in range(3):
         try:
-            # If the file exists, load and filter it
             if file_client.exists():
                 existing = file_client.download_file().readall()
                 df_existing = pd.read_csv(io.BytesIO(existing))
 
-                # Drop previous records for this vendor (by name and email)
+                # Standardize email and route ID for comparison
+                df_existing["Vendor Email"] = df_existing["Vendor Email"].str.lower()
+                df_existing["Route ID"] = df_existing["Route ID"].str.upper()
+
+                email = df_submission["Vendor Email"].iloc[0].lower()
+                updated_route_ids = df_submission["Route ID"].str.upper().tolist()
+
+                # Remove existing submissions from same email + same Route ID
                 df_existing = df_existing[~(
-                    (df_existing["Vendor Email"] == df_submission["Vendor Email"].iloc[0])
+                    (df_existing["Vendor Email"] == email) &
+                    (df_existing["Route ID"].isin(updated_route_ids))
                 )]
 
-                # Append the new data
                 df = pd.concat([df_existing, df_submission], ignore_index=True)
             else:
                 df = df_submission
 
-            # Standardize vendor names and email addresses
-            df["Vendor Name"] = df["Vendor Name"].apply(lambda x: x.strip().title())  # Title case for vendor names
-            df["Vendor Email"] = df["Vendor Email"].apply(lambda x: x.strip().lower())  # Lowercase for emails
+            # Standardize vendor info
+            df["Vendor Name"] = df["Vendor Name"].apply(lambda x: x.strip().title())
+            df["Vendor Email"] = df["Vendor Email"].apply(lambda x: x.strip().lower())
 
-            # Upload updated data (save in proper case for vendor names, lowercase for email)
+            # Save to ADLS
             buffer = io.StringIO()
             df.to_csv(buffer, index=False)
             file_client.upload_data(io.BytesIO(buffer.getvalue().encode()), overwrite=True)
@@ -160,44 +163,34 @@ with st.container():
     route_options = ZONE_ROUTE_MAP.get(region, [])
     route_ids = st.multiselect("🛣️ Select Route IDs", route_options, key="route_id")
 
-    # Default selection for Truck Types
     truck_types = st.multiselect("🚛 Select Truck Types", TRUCK_TYPES, default=TRUCK_TYPES, key="truck_type")
 
     if route_ids and truck_types:
         st.subheader("📊 Enter Truck Count and Price")
-
-        # Load the truck data from ADLS (or another source)
         truck_data = read_csv_from_adls(FILE_PATH)
 
         combo_data = []
         for route in route_ids:
             for truck in truck_types:
-                # Get the truck count based on the route and truck type
-                matching_row = truck_data[ 
-                    (truck_data["Route_ID"] == route) & 
-                    (truck_data["Truck_Type"] == truck)
-                ]
-
-                if not matching_row.empty:
-                    required_count = matching_row["Required_Truck"].iloc[0]
-                else:
-                    required_count = 0  # Default value if no match is found
+                row = truck_data[(truck_data["Route_ID"] == route) & (truck_data["Truck_Type"] == truck)]
+                required_count = row["Required_Truck"].iloc[0] if not row.empty else 0
 
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.number_input(f"{truck} | {route} | Count", value=required_count, min_value=0, step=10, key=f"{route}_{truck}_count")
+                    count = st.number_input(f"{truck} | {route} | Count", value=required_count, min_value=0, step=10, key=f"{route}_{truck}_count")
                 with col2:
                     price = st.number_input(f"{truck} | {route} | Price per Truck", min_value=0.0, step=500.0, key=f"{route}_{truck}_price")
-                total_cost = required_count * price
+
+                total_cost = count * price
                 st.markdown(f"**💰 Total Cost for {truck} on {route}: ₹{total_cost:,.2f}**")
 
                 combo_data.append({
-                    "Vendor Name": vendor_name,
-                    "Vendor Email": vendor_email,
+                    "Vendor Name": vendor_name.strip().title(),
+                    "Vendor Email": vendor_email.strip().lower(),
                     "Region": region,
-                    "Route ID": route,
+                    "Route ID": route.upper(),
                     "Truck Type": truck,
-                    "Count": required_count,
+                    "Count": count,
                     "Price per Truck": price,
                     "Total Cost": total_cost,
                     "Submitted At": pd.Timestamp.now()
