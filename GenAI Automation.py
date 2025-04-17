@@ -54,7 +54,7 @@ st.markdown("""
 ADLS_ACCOUNT_NAME = "genaiautomationsa"
 ADLS_ACCOUNT_KEY = "vwwQ7uleP291h6A0NjsAdSAlUmlXW2qUipCvynul27mgrDjEqH7ofshn4GstabN6aj78c/DVQnLp+ASt7vdksg=="
 FILE_SYSTEM_NAME = "vendor-rfq"
-FILE_PATH = "truck_summary/region_vendor_summary.csv"  # ADLS file path for the CSV
+FILE_PATH = "truck_summary/region_vendor_summary.csv"
 
 ZONE_ROUTE_MAP = {
     "Andhra Region": [f"R{i:03d}" for i in range(1, 16)],
@@ -87,8 +87,6 @@ def read_csv_from_adls(file_path):
     adls_client = get_adls_client()
     fs_client = adls_client.get_file_system_client(FILE_SYSTEM_NAME)
     file_client = fs_client.get_file_client(file_path)
-
-    # Read CSV from ADLS
     download = file_client.download_file()
     downloaded_bytes = download.readall()
     df = pd.read_csv(io.BytesIO(downloaded_bytes))
@@ -102,26 +100,19 @@ def append_to_quotation_file(df_submission: pd.DataFrame):
 
     for _ in range(3):
         try:
-            # If the file exists, load and filter it
             if file_client.exists():
                 existing = file_client.download_file().readall()
                 df_existing = pd.read_csv(io.BytesIO(existing))
 
-                # Drop previous records for this vendor (by name and email)
                 df_existing = df_existing[~(
                     (df_existing["vendor name"] == df_submission["vendor name"].iloc[0]) & 
                     (df_existing["vendor email"] == df_submission["vendor email"].iloc[0])
                 )]
 
-                # Append the new data
                 df = pd.concat([df_existing, df_submission], ignore_index=True)
             else:
                 df = df_submission
 
-            # Convert all form data to lowercase
-            df = df.applymap(lambda x: x.lower() if isinstance(x, str) else x)
-
-            # Upload updated data (save in lowercase)
             buffer = io.StringIO()
             df.to_csv(buffer, index=False)
             file_client.upload_data(io.BytesIO(buffer.getvalue().encode()), overwrite=True)
@@ -148,7 +139,7 @@ with st.container():
 
     col1, col2 = st.columns(2)
     with col1:
-        vendor_name = st.text_input("🧾 Company Name", key="vendor_name")
+        vendor_name = st.text_input("📟 Company Name", key="vendor_name")
     with col2:
         vendor_email = st.text_input("✉️ Email Address", key="vendor_email")
 
@@ -158,21 +149,17 @@ with st.container():
 
     region = st.selectbox("🌍 Select Region", list(ZONE_ROUTE_MAP.keys()), on_change=reset_routes, key="region")
     route_options = ZONE_ROUTE_MAP.get(region, [])
-    route_ids = st.multiselect("🛣️ Select Route IDs", route_options, key="route_id")
+    route_ids = st.multiselect("🚣️ Select Route IDs", route_options, key="route_id")
 
-    # Default selection for Truck Types
     truck_types = st.multiselect("🚛 Select Truck Types", TRUCK_TYPES, default=TRUCK_TYPES, key="truck_type")
 
     if route_ids and truck_types:
         st.subheader("📊 Enter Truck Count and Price")
-
-        # Load the truck data from ADLS (or another source)
         truck_data = read_csv_from_adls(FILE_PATH)
 
         combo_data = []
         for route in route_ids:
             for truck in truck_types:
-                # Get the truck count based on the route and truck type
                 matching_row = truck_data[ 
                     (truck_data["Route_ID"] == route) & 
                     (truck_data["Truck_Type"] == truck)
@@ -181,7 +168,7 @@ with st.container():
                 if not matching_row.empty:
                     required_count = matching_row["Required_Truck"].iloc[0]
                 else:
-                    required_count = 0  # Default value if no match is found
+                    required_count = 0
 
                 col1, col2 = st.columns(2)
                 with col1:
@@ -212,22 +199,3 @@ with st.container():
                 st.rerun()
             except Exception as e:
                 st.error(f"❌ Upload failed: {e}")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
