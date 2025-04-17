@@ -118,10 +118,11 @@ def append_to_quotation_file(df_submission: pd.DataFrame):
             else:
                 df = df_submission
 
-            # Convert all form data to lowercase
-            df = df.applymap(lambda x: x.lower() if isinstance(x, str) else x)
+            # Standardize vendor names and email addresses
+            df["Vendor Name"] = df["Vendor Name"].apply(lambda x: x.strip().title())  # Title case for vendor names
+            df["Vendor Email"] = df["Vendor Email"].apply(lambda x: x.strip().lower())  # Lowercase for emails
 
-            # Upload updated data (save in lowercase)
+            # Upload updated data (save in proper case for vendor names, lowercase for email)
             buffer = io.StringIO()
             df.to_csv(buffer, index=False)
             file_client.upload_data(io.BytesIO(buffer.getvalue().encode()), overwrite=True)
@@ -206,8 +207,6 @@ with st.container():
         if st.button("✅ Submit Quotation"):
             try:
                 df_submission = pd.DataFrame(combo_data)
-
-                # Save the data with proper column names
                 append_to_quotation_file(df_submission)
                 st.success("Submitted successfully!")
                 st.session_state["submitted"] = True
