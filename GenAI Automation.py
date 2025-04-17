@@ -79,7 +79,7 @@ TRUCK_TYPES = ["Container", "LCV", "MCV"]
 # ------------------ TRUCK REQUIREMENT LOADER ------------------
 @st.cache_data
 def load_truck_requirements():
-    file_path = r"C:\\Users\\sswain_quantum-i\\OneDrive\\Desktop\\Truck Procurement (Gen AI)\\region_vendor_summary.csv"  # 🔹 Fill your file path here
+    file_path = "abfss://vendor-rfq@genaiautomationsa.dfs.core.windows.net/truck_summary/region_vendor_summary.csv"  # 🔹 Fill your file path here
     return pd.read_csv(file_path)
 
 truck_req_df = load_truck_requirements()
