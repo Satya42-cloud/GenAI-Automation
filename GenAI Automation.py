@@ -1,4 +1,3 @@
-# ------------------ IMPORTS ------------------
 import streamlit as st
 import pandas as pd
 import io
@@ -76,20 +75,39 @@ ZONE_ROUTE_MAP = {
 
 TRUCK_TYPES = ["Container", "LCV", "MCV"]
 
-# ------------------ TRUCK REQUIREMENT LOADER ------------------
-@st.cache_data
-def load_truck_requirements():
-    file_path = "abfss://vendor-rfq@genaiautomationsa.dfs.core.windows.net/truck_summary/region_vendor_summary.csv"  # 🔹 Fill your file path here
-    return pd.read_csv(file_path)
-
-truck_req_df = load_truck_requirements()
-
 # ------------------ ADLS FUNCTIONS ------------------
 def get_adls_client():
     return DataLakeServiceClient(
         account_url=f"https://{ADLS_ACCOUNT_NAME}.dfs.core.windows.net",
         credential=ADLS_ACCOUNT_KEY
     )
+
+def get_required_truck_count(region, route_id, truck_type):
+    # Load region_vendor_summary.csv from ADLS and filter based on region, route_id, and truck_type
+    adls_client = get_adls_client()
+    fs_client = adls_client.get_file_system_client(FILE_SYSTEM_NAME)
+    file_client = fs_client.get_file_client("region_vendor_summary.csv")
+
+    try:
+        # If file exists, load it
+        if file_client.exists():
+            file_content = file_client.download_file().readall()
+            df = pd.read_csv(io.BytesIO(file_content))
+
+            # Filter by region, route_id, and truck_type
+            filtered_data = df[
+                (df["Region"] == region) & 
+                (df["Route_ID"] == route_id) & 
+                (df["Truck_Type"] == truck_type)
+            ]
+
+            if not filtered_data.empty:
+                return filtered_data["Required_Truck"].iloc[0]
+            else:
+                return 0
+    except Exception as e:
+        print(f"Error loading required truck count: {e}")
+    return 0
 
 def append_to_quotation_file(df_submission: pd.DataFrame):
     file_path = "vendor_response/quotation.csv"
@@ -99,18 +117,26 @@ def append_to_quotation_file(df_submission: pd.DataFrame):
 
     for _ in range(3):
         try:
+            # If the file exists, load and filter it
             if file_client.exists():
                 existing = file_client.download_file().readall()
                 df_existing = pd.read_csv(io.BytesIO(existing))
+
+                # Drop previous records for this vendor
                 df_existing = df_existing[~(
-                    (df_existing["Vendor Name"].str.lower() == df_submission["Vendor Name"].iloc[0].lower()) &
-                    (df_existing["Vendor Email"].str.lower() == df_submission["Vendor Email"].iloc[0].lower())
+                    (df_existing["Vendor Name"] == df_submission["Vendor Name"].iloc[0]) & 
+                    (df_existing["Vendor Email"] == df_submission["Vendor Email"].iloc[0])
                 )]
+
+                # Append the new data
                 df = pd.concat([df_existing, df_submission], ignore_index=True)
             else:
                 df = df_submission
 
-            df = df.applymap(lambda x: x.lower() if isinstance(x, str) else x)
+            # Convert all column names to lowercase
+            df.columns = map(str.lower, df.columns)
+
+            # Upload updated data
             buffer = io.StringIO()
             df.to_csv(buffer, index=False)
             file_client.upload_data(io.BytesIO(buffer.getvalue().encode()), overwrite=True)
@@ -137,7 +163,7 @@ with st.container():
 
     col1, col2 = st.columns(2)
     with col1:
-        vendor_name = st.text_input("📟 Company Name", key="vendor_name")
+        vendor_name = st.text_input("🧾 Company Name", key="vendor_name")
     with col2:
         vendor_email = st.text_input("✉️ Email Address", key="vendor_email")
 
@@ -147,22 +173,24 @@ with st.container():
 
     region = st.selectbox("🌍 Select Region", list(ZONE_ROUTE_MAP.keys()), on_change=reset_routes, key="region")
     route_options = ZONE_ROUTE_MAP.get(region, [])
-    route_ids = st.multiselect("🚣️ Select Route IDs", route_options, key="route_id")
+    route_ids = st.multiselect("🛣️ Select Route IDs", route_options, key="route_id")
 
-    if route_ids:
-        truck_types = TRUCK_TYPES
-        st.multiselect("🚛 Truck Types", truck_types, default=truck_types, disabled=True, key="truck_type")
+    if "truck_type" in st.session_state and not isinstance(st.session_state["truck_type"], list):
+        st.session_state["truck_type"] = []
 
+    truck_types = st.multiselect("🚛 Select Truck Types", TRUCK_TYPES, key="truck_type")
+
+    if route_ids and truck_types:
         st.subheader("📊 Enter Truck Count and Price")
         combo_data = []
         for route in route_ids:
             for truck in truck_types:
-                default_count = truck_req_df.query("`Route ID` == @route and `Truck Type` == @truck")['Count'].values
-                default_count = int(default_count[0]) if len(default_count) else 0
+                # Get the required truck count from ADLS for each truck type and route
+                required_count = get_required_truck_count(region, route, truck)
 
                 col1, col2 = st.columns(2)
                 with col1:
-                    count = st.number_input(f"{truck} | {route} | Count", min_value=0, step=10, value=default_count, key=f"{route}_{truck}_count")
+                    count = st.number_input(f"{truck} | {route} | Count", min_value=0, step=10, value=required_count, key=f"{route}_{truck}_count")
                 with col2:
                     price = st.number_input(f"{truck} | {route} | Price per Truck", min_value=0.0, step=500.0, key=f"{route}_{truck}_price")
                 total_cost = count * price
@@ -189,6 +217,8 @@ with st.container():
                 st.rerun()
             except Exception as e:
                 st.error(f"❌ Upload failed: {e}")
+
+
 
 
 
