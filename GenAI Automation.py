@@ -90,19 +90,31 @@ def append_to_quotation_file(df_submission: pd.DataFrame):
 
     for _ in range(3):
         try:
+            # If the file exists, load and filter it
             if file_client.exists():
                 existing = file_client.download_file().readall()
                 df_existing = pd.read_csv(io.BytesIO(existing))
+
+                # Drop previous records for this vendor
+                df_existing = df_existing[~(
+                    (df_existing["Vendor Name"] == df_submission["Vendor Name"].iloc[0]) &
+                    (df_existing["Vendor Email"] == df_submission["Vendor Email"].iloc[0])
+                )]
+
+                # Append the new data
                 df = pd.concat([df_existing, df_submission], ignore_index=True)
             else:
                 df = df_submission
 
+            # Upload updated data
             buffer = io.StringIO()
             df.to_csv(buffer, index=False)
             file_client.upload_data(io.BytesIO(buffer.getvalue().encode()), overwrite=True)
             return True
+
         except Exception as e:
             time.sleep(1)
+
     raise Exception("❌ Failed to append after 3 attempts.")
 
 def reset_routes():
