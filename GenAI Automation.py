@@ -54,6 +54,7 @@ st.markdown("""
 ADLS_ACCOUNT_NAME = "genaiautomationsa"
 ADLS_ACCOUNT_KEY = "vwwQ7uleP291h6A0NjsAdSAlUmlXW2qUipCvynul27mgrDjEqH7ofshn4GstabN6aj78c/DVQnLp+ASt7vdksg=="
 FILE_SYSTEM_NAME = "vendor-rfq"
+FILE_PATH = "truck_summary/region_vendor_summary.csv"  # ADLS file path for the CSV
 
 ZONE_ROUTE_MAP = {
     "Andhra Region": [f"R{i:03d}" for i in range(1, 16)],
@@ -81,6 +82,17 @@ def get_adls_client():
         account_url=f"https://{ADLS_ACCOUNT_NAME}.dfs.core.windows.net",
         credential=ADLS_ACCOUNT_KEY
     )
+
+def read_csv_from_adls(file_path):
+    adls_client = get_adls_client()
+    fs_client = adls_client.get_file_system_client(FILE_SYSTEM_NAME)
+    file_client = fs_client.get_file_client(file_path)
+
+    # Read CSV from ADLS
+    download = file_client.download_file()
+    downloaded_bytes = download.readall()
+    df = pd.read_csv(io.BytesIO(downloaded_bytes))
+    return df
 
 def append_to_quotation_file(df_submission: pd.DataFrame):
     file_path = "vendor_response/quotation.csv"
@@ -146,16 +158,14 @@ with st.container():
     route_options = ZONE_ROUTE_MAP.get(region, [])
     route_ids = st.multiselect("🛣️ Select Route IDs", route_options, key="route_id")
 
-    if "truck_type" in st.session_state and not isinstance(st.session_state["truck_type"], list):
-        st.session_state["truck_type"] = []
-
-    truck_types = st.multiselect("🚛 Select Truck Types", TRUCK_TYPES, key="truck_type")
+    # Default selection for Truck Types
+    truck_types = st.multiselect("🚛 Select Truck Types", TRUCK_TYPES, default=TRUCK_TYPES, key="truck_type")
 
     if route_ids and truck_types:
         st.subheader("📊 Enter Truck Count and Price")
 
-        # Load the truck data from the local file
-        truck_data = pd.read_csv(r"C:\Users\sswain_quantum-i\OneDrive\Desktop\Truck Procurement (Gen AI)\region_vendor_summary.csv")
+        # Load the truck data from ADLS (or another source)
+        truck_data = read_csv_from_adls(FILE_PATH)
 
         combo_data = []
         for route in route_ids:
@@ -200,6 +210,7 @@ with st.container():
                 st.rerun()
             except Exception as e:
                 st.error(f"❌ Upload failed: {e}")
+
 
 
 
