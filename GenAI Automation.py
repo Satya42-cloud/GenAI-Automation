@@ -118,8 +118,8 @@ def append_to_quotation_file(df_submission: pd.DataFrame):
             else:
                 df = df_submission
 
-            # Convert column names to lowercase here
-            df.columns = [col.lower() for col in df.columns]  # Ensure lowercase column names
+            # Convert all form data to lowercase
+            df = df.applymap(lambda x: x.lower() if isinstance(x, str) else x)
 
             # Upload updated data (save in lowercase)
             buffer = io.StringIO()
@@ -212,6 +212,7 @@ with st.container():
                 st.rerun()
             except Exception as e:
                 st.error(f"❌ Upload failed: {e}")
+
 
 
 
