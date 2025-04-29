@@ -1,3 +1,0 @@
-streamlit
-azure-storage-file-datalake
-pandas
