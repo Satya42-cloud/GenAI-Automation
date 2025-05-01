@@ -1,0 +1,710 @@
+{
+  "datasets" : [ {
+    "name" : "5b4ff494",
+    "displayName" : "eastern_seaboard",
+    "query" : "SELECT * FROM genai_catalog.zone_forcast.eastern_seaboard"
+  }, {
+    "name" : "5800af7e",
+    "displayName" : "shortlisted_vendors",
+    "query" : "SELECT * FROM genai_catalog.genai_schema.shortlisted_vendors"
+  }, {
+    "name" : "6e411740",
+    "displayName" : "Untitled dataset",
+    "query" : "SELECT \r\n  Vendor_ID,\r\n  Vendor_Name,\r\n  Vendor_Email,\r\n  concat_ws(', ', collect_set(Route_ID)) AS Routes\r\nFROM genai_catalog.genai_schema.shortlisted_vendors\r\nGROUP BY Vendor_ID, Vendor_Name, Vendor_Email\r\nORDER BY Vendor_ID;\r\n\r\n"
+  } ],
+  "pages" : [ {
+    "name" : "307d47c4",
+    "displayName" : "Truck Procurement Report",
+    "layout" : [ {
+      "widget" : {
+        "name" : "fc8b0234",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "5b4ff494",
+            "fields" : [ {
+              "name" : "Truck_Type",
+              "expression" : "`Truck_Type`"
+            }, {
+              "name" : "Route_ID",
+              "expression" : "`Route_ID`"
+            }, {
+              "name" : "Required_Trucks",
+              "expression" : "`Required_Trucks`"
+            } ],
+            "filters" : [ {
+              "expression" : "`Route_ID` IN (`Route_ID`) OR TRUE"
+            } ],
+            "disaggregated" : true
+          }
+        } ],
+        "spec" : {
+          "version" : 3,
+          "widgetType" : "area",
+          "encodings" : {
+            "x" : {
+              "fieldName" : "Route_ID",
+              "scale" : {
+                "type" : "categorical"
+              },
+              "displayName" : "Route ID"
+            },
+            "y" : {
+              "fieldName" : "Required_Trucks",
+              "scale" : {
+                "type" : "quantitative"
+              },
+              "format" : {
+                "type" : "number-plain",
+                "abbreviation" : "none",
+                "decimalPlaces" : {
+                  "type" : "max",
+                  "places" : 2
+                }
+              },
+              "displayName" : "Required Truck"
+            },
+            "color" : {
+              "fieldName" : "Truck_Type",
+              "scale" : {
+                "type" : "categorical"
+              },
+              "displayName" : "Truck_Type"
+            },
+            "label" : {
+              "show" : true
+            }
+          },
+          "frame" : {
+            "showTitle" : true,
+            "headerAlignment" : "center",
+            "title" : "Forecast Insights"
+          }
+        }
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 3,
+        "width" : 6,
+        "height" : 7
+      }
+    }, {
+      "widget" : {
+        "name" : "b4e5e93b",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "5800af7e",
+            "fields" : [ {
+              "name" : "Vendor_ID",
+              "expression" : "`Vendor_ID`"
+            }, {
+              "name" : "Vendor_Name",
+              "expression" : "`Vendor_Name`"
+            }, {
+              "name" : "Vendor_Email",
+              "expression" : "`Vendor_Email`"
+            }, {
+              "name" : "Route_ID",
+              "expression" : "`Route_ID`"
+            }, {
+              "name" : "Total_Quoted_Cost",
+              "expression" : "`Total_Quoted_Cost`"
+            }, {
+              "name" : "Final_Score",
+              "expression" : "`Final_Score`"
+            }, {
+              "name" : "Rank",
+              "expression" : "`Rank`"
+            }, {
+              "name" : "active",
+              "expression" : "`active`"
+            } ],
+            "disaggregated" : true
+          }
+        } ],
+        "spec" : {
+          "version" : 1,
+          "widgetType" : "table",
+          "encodings" : {
+            "columns" : [ {
+              "fieldName" : "Vendor_ID",
+              "booleanValues" : [ "false", "true" ],
+              "imageUrlTemplate" : "{{ @ }}",
+              "imageTitleTemplate" : "{{ @ }}",
+              "imageWidth" : "",
+              "imageHeight" : "",
+              "linkUrlTemplate" : "{{ @ }}",
+              "linkTextTemplate" : "{{ @ }}",
+              "linkTitleTemplate" : "{{ @ }}",
+              "linkOpenInNewTab" : true,
+              "type" : "string",
+              "displayAs" : "string",
+              "visible" : true,
+              "order" : 100000,
+              "title" : "Vendor ID",
+              "allowSearch" : false,
+              "alignContent" : "left",
+              "allowHTML" : false,
+              "highlightLinks" : false,
+              "useMonospaceFont" : false,
+              "preserveWhitespace" : false,
+              "displayName" : "Vendor_ID"
+            }, {
+              "fieldName" : "Vendor_Name",
+              "booleanValues" : [ "false", "true" ],
+              "imageUrlTemplate" : "{{ @ }}",
+              "imageTitleTemplate" : "{{ @ }}",
+              "imageWidth" : "",
+              "imageHeight" : "",
+              "linkUrlTemplate" : "{{ @ }}",
+              "linkTextTemplate" : "{{ @ }}",
+              "linkTitleTemplate" : "{{ @ }}",
+              "linkOpenInNewTab" : true,
+              "type" : "string",
+              "displayAs" : "string",
+              "visible" : true,
+              "order" : 100001,
+              "title" : "Vendor Name",
+              "allowSearch" : false,
+              "alignContent" : "left",
+              "allowHTML" : false,
+              "highlightLinks" : false,
+              "useMonospaceFont" : false,
+              "preserveWhitespace" : false,
+              "displayName" : "Vendor_Name"
+            }, {
+              "fieldName" : "Vendor_Email",
+              "booleanValues" : [ "false", "true" ],
+              "imageUrlTemplate" : "{{ @ }}",
+              "imageTitleTemplate" : "{{ @ }}",
+              "imageWidth" : "",
+              "imageHeight" : "",
+              "linkUrlTemplate" : "{{ @ }}",
+              "linkTextTemplate" : "{{ @ }}",
+              "linkTitleTemplate" : "{{ @ }}",
+              "linkOpenInNewTab" : true,
+              "type" : "string",
+              "displayAs" : "string",
+              "visible" : true,
+              "order" : 100002,
+              "title" : "Vendor Email",
+              "allowSearch" : false,
+              "alignContent" : "left",
+              "allowHTML" : false,
+              "highlightLinks" : false,
+              "useMonospaceFont" : false,
+              "preserveWhitespace" : false,
+              "displayName" : "Vendor_Email"
+            }, {
+              "fieldName" : "Route_ID",
+              "booleanValues" : [ "false", "true" ],
+              "imageUrlTemplate" : "{{ @ }}",
+              "imageTitleTemplate" : "{{ @ }}",
+              "imageWidth" : "",
+              "imageHeight" : "",
+              "linkUrlTemplate" : "{{ @ }}",
+              "linkTextTemplate" : "{{ @ }}",
+              "linkTitleTemplate" : "{{ @ }}",
+              "linkOpenInNewTab" : true,
+              "type" : "string",
+              "displayAs" : "string",
+              "visible" : true,
+              "order" : 100003,
+              "title" : "Route ID",
+              "allowSearch" : false,
+              "alignContent" : "left",
+              "allowHTML" : false,
+              "highlightLinks" : false,
+              "useMonospaceFont" : false,
+              "preserveWhitespace" : false,
+              "displayName" : "Route_ID"
+            }, {
+              "fieldName" : "Total_Quoted_Cost",
+              "numberFormat" : "0.0",
+              "booleanValues" : [ "false", "true" ],
+              "imageUrlTemplate" : "{{ @ }}",
+              "imageTitleTemplate" : "{{ @ }}",
+              "imageWidth" : "",
+              "imageHeight" : "",
+              "linkUrlTemplate" : "{{ @ }}",
+              "linkTextTemplate" : "{{ @ }}",
+              "linkTitleTemplate" : "{{ @ }}",
+              "linkOpenInNewTab" : true,
+              "type" : "float",
+              "displayAs" : "number",
+              "visible" : true,
+              "order" : 100004,
+              "title" : "Total Quoted Cost",
+              "allowSearch" : false,
+              "alignContent" : "right",
+              "allowHTML" : false,
+              "highlightLinks" : false,
+              "useMonospaceFont" : false,
+              "preserveWhitespace" : false,
+              "displayName" : "Total_Quoted_Cost"
+            }, {
+              "fieldName" : "Final_Score",
+              "numberFormat" : "0.00",
+              "booleanValues" : [ "false", "true" ],
+              "imageUrlTemplate" : "{{ @ }}",
+              "imageTitleTemplate" : "{{ @ }}",
+              "imageWidth" : "",
+              "imageHeight" : "",
+              "linkUrlTemplate" : "{{ @ }}",
+              "linkTextTemplate" : "{{ @ }}",
+              "linkTitleTemplate" : "{{ @ }}",
+              "linkOpenInNewTab" : true,
+              "type" : "float",
+              "displayAs" : "number",
+              "visible" : true,
+              "order" : 100005,
+              "title" : "Final Score",
+              "allowSearch" : false,
+              "alignContent" : "right",
+              "allowHTML" : false,
+              "highlightLinks" : false,
+              "useMonospaceFont" : false,
+              "preserveWhitespace" : false,
+              "displayName" : "Final_Score"
+            }, {
+              "fieldName" : "Rank",
+              "numberFormat" : "0",
+              "booleanValues" : [ "false", "true" ],
+              "imageUrlTemplate" : "{{ @ }}",
+              "imageTitleTemplate" : "{{ @ }}",
+              "imageWidth" : "",
+              "imageHeight" : "",
+              "linkUrlTemplate" : "{{ @ }}",
+              "linkTextTemplate" : "{{ @ }}",
+              "linkTitleTemplate" : "{{ @ }}",
+              "linkOpenInNewTab" : true,
+              "type" : "integer",
+              "displayAs" : "number",
+              "visible" : true,
+              "order" : 100006,
+              "title" : "Rank",
+              "allowSearch" : false,
+              "alignContent" : "right",
+              "allowHTML" : false,
+              "highlightLinks" : false,
+              "useMonospaceFont" : false,
+              "preserveWhitespace" : false,
+              "displayName" : "Rank"
+            }, {
+              "fieldName" : "active",
+              "booleanValues" : [ "false", "true" ],
+              "imageUrlTemplate" : "{{ @ }}",
+              "imageTitleTemplate" : "{{ @ }}",
+              "imageWidth" : "",
+              "imageHeight" : "",
+              "linkUrlTemplate" : "{{ @ }}",
+              "linkTextTemplate" : "{{ @ }}",
+              "linkTitleTemplate" : "{{ @ }}",
+              "linkOpenInNewTab" : true,
+              "type" : "boolean",
+              "displayAs" : "boolean",
+              "visible" : true,
+              "order" : 100007,
+              "title" : "active",
+              "allowSearch" : false,
+              "alignContent" : "right",
+              "allowHTML" : false,
+              "highlightLinks" : false,
+              "useMonospaceFont" : false,
+              "preserveWhitespace" : false,
+              "displayName" : "active"
+            } ]
+          },
+          "invisibleColumns" : [ ],
+          "allowHTMLByDefault" : false,
+          "itemsPerPage" : 150,
+          "paginationSize" : "default",
+          "condensed" : true,
+          "withRowNumber" : false,
+          "frame" : {
+            "showTitle" : true,
+            "headerAlignment" : "center",
+            "title" : "Shortlisted Vendor List"
+          }
+        }
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 17,
+        "width" : 6,
+        "height" : 5
+      }
+    }, {
+      "widget" : {
+        "name" : "afc0fcbd",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "5800af7e",
+            "fields" : [ {
+              "name" : "countdistinct(Route_ID)",
+              "expression" : "COUNT(DISTINCT `Route_ID`)"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "counter",
+          "encodings" : {
+            "value" : {
+              "fieldName" : "countdistinct(Route_ID)",
+              "displayName" : "Count of Unique Route_ID"
+            }
+          },
+          "frame" : {
+            "showTitle" : true,
+            "headerAlignment" : "center",
+            "title" : " Unique Routes"
+          }
+        }
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 1,
+        "width" : 3,
+        "height" : 2
+      }
+    }, {
+      "widget" : {
+        "name" : "868da8ca",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "5800af7e",
+            "fields" : [ {
+              "name" : "countdistinct(Vendor_ID)",
+              "expression" : "COUNT(DISTINCT `Vendor_ID`)"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "counter",
+          "encodings" : {
+            "value" : {
+              "fieldName" : "countdistinct(Vendor_ID)",
+              "displayName" : "Count of Unique Vendor_ID"
+            }
+          },
+          "frame" : {
+            "showTitle" : true,
+            "headerAlignment" : "center",
+            "title" : "Unique Vendors"
+          }
+        }
+      },
+      "position" : {
+        "x" : 3,
+        "y" : 1,
+        "width" : 3,
+        "height" : 2
+      }
+    }, {
+      "widget" : {
+        "name" : "ebc9b2a3",
+        "queries" : [ {
+          "name" : "dashboards/01f020cdf48d1c57b8d137cf79234815/datasets/01f020daf33818469f722a9c35babd7e_Route_ID",
+          "query" : {
+            "datasetName" : "5800af7e",
+            "fields" : [ {
+              "name" : "Route_ID",
+              "expression" : "`Route_ID`"
+            }, {
+              "name" : "Route_ID_associativity",
+              "expression" : "COUNT_IF(`associative_filter_predicate_group`)"
+            } ],
+            "disaggregated" : false
+          }
+        }, {
+          "name" : "dashboards/01f020cdf48d1c57b8d137cf79234815/datasets/01f020d94ea21f9cb0ee4a0fa4f381de_Route_ID",
+          "query" : {
+            "datasetName" : "5b4ff494",
+            "fields" : [ {
+              "name" : "Route_ID",
+              "expression" : "`Route_ID`"
+            }, {
+              "name" : "Route_ID_associativity",
+              "expression" : "COUNT_IF(`associative_filter_predicate_group`)"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "filter-multi-select",
+          "encodings" : {
+            "fields" : [ {
+              "fieldName" : "Route_ID",
+              "displayName" : "Route_ID",
+              "queryName" : "dashboards/01f020cdf48d1c57b8d137cf79234815/datasets/01f020daf33818469f722a9c35babd7e_Route_ID"
+            }, {
+              "fieldName" : "Route_ID",
+              "displayName" : "Route_ID",
+              "queryName" : "dashboards/01f020cdf48d1c57b8d137cf79234815/datasets/01f020d94ea21f9cb0ee4a0fa4f381de_Route_ID"
+            } ]
+          },
+          "frame" : {
+            "showTitle" : true,
+            "title" : "Route ID"
+          }
+        }
+      },
+      "position" : {
+        "x" : 3,
+        "y" : 0,
+        "width" : 3,
+        "height" : 1
+      }
+    }, {
+      "widget" : {
+        "name" : "eda75795",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "5800af7e",
+            "fields" : [ {
+              "name" : "Vendor_Name",
+              "expression" : "`Vendor_Name`"
+            }, {
+              "name" : "sum(Total_Quoted_Cost)",
+              "expression" : "SUM(`Total_Quoted_Cost`)"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 3,
+          "widgetType" : "bar",
+          "encodings" : {
+            "x" : {
+              "fieldName" : "Vendor_Name",
+              "scale" : {
+                "type" : "categorical",
+                "sort" : {
+                  "by" : "y-reversed"
+                }
+              },
+              "axis" : { },
+              "displayName" : "Vendor_Name"
+            },
+            "y" : {
+              "fieldName" : "sum(Total_Quoted_Cost)",
+              "scale" : {
+                "type" : "quantitative"
+              },
+              "displayName" : "Sum of Total_Quoted_Cost"
+            },
+            "color" : {
+              "fieldName" : "Vendor_Name",
+              "scale" : {
+                "type" : "categorical"
+              },
+              "displayName" : "Vendor_Name"
+            },
+            "label" : {
+              "show" : false
+            }
+          },
+          "frame" : {
+            "headerAlignment" : "center",
+            "title" : "Vendor Contribution Summary",
+            "showTitle" : true
+          }
+        }
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 10,
+        "width" : 6,
+        "height" : 7
+      }
+    }, {
+      "widget" : {
+        "name" : "345c403a",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "6e411740",
+            "fields" : [ {
+              "name" : "Vendor_ID",
+              "expression" : "`Vendor_ID`"
+            }, {
+              "name" : "Vendor_Name",
+              "expression" : "`Vendor_Name`"
+            }, {
+              "name" : "Vendor_Email",
+              "expression" : "`Vendor_Email`"
+            }, {
+              "name" : "Routes",
+              "expression" : "`Routes`"
+            } ],
+            "disaggregated" : true
+          }
+        } ],
+        "spec" : {
+          "version" : 1,
+          "widgetType" : "table",
+          "encodings" : {
+            "columns" : [ {
+              "fieldName" : "Vendor_ID",
+              "booleanValues" : [ "false", "true" ],
+              "imageUrlTemplate" : "{{ @ }}",
+              "imageTitleTemplate" : "{{ @ }}",
+              "imageWidth" : "",
+              "imageHeight" : "",
+              "linkUrlTemplate" : "{{ @ }}",
+              "linkTextTemplate" : "{{ @ }}",
+              "linkTitleTemplate" : "{{ @ }}",
+              "linkOpenInNewTab" : true,
+              "type" : "string",
+              "displayAs" : "string",
+              "visible" : true,
+              "order" : 100000,
+              "title" : "Vendor ID",
+              "allowSearch" : false,
+              "alignContent" : "left",
+              "allowHTML" : false,
+              "highlightLinks" : false,
+              "useMonospaceFont" : false,
+              "preserveWhitespace" : false,
+              "displayName" : "Vendor_ID"
+            }, {
+              "fieldName" : "Vendor_Name",
+              "booleanValues" : [ "false", "true" ],
+              "imageUrlTemplate" : "{{ @ }}",
+              "imageTitleTemplate" : "{{ @ }}",
+              "imageWidth" : "",
+              "imageHeight" : "",
+              "linkUrlTemplate" : "{{ @ }}",
+              "linkTextTemplate" : "{{ @ }}",
+              "linkTitleTemplate" : "{{ @ }}",
+              "linkOpenInNewTab" : true,
+              "type" : "string",
+              "displayAs" : "string",
+              "visible" : true,
+              "order" : 100001,
+              "title" : "Vendor Name",
+              "allowSearch" : false,
+              "alignContent" : "left",
+              "allowHTML" : false,
+              "highlightLinks" : false,
+              "useMonospaceFont" : false,
+              "preserveWhitespace" : false,
+              "displayName" : "Vendor_Name"
+            }, {
+              "fieldName" : "Vendor_Email",
+              "booleanValues" : [ "false", "true" ],
+              "imageUrlTemplate" : "{{ @ }}",
+              "imageTitleTemplate" : "{{ @ }}",
+              "imageWidth" : "",
+              "imageHeight" : "",
+              "linkUrlTemplate" : "{{ @ }}",
+              "linkTextTemplate" : "{{ @ }}",
+              "linkTitleTemplate" : "{{ @ }}",
+              "linkOpenInNewTab" : true,
+              "type" : "string",
+              "displayAs" : "string",
+              "visible" : true,
+              "order" : 100002,
+              "title" : "Vendor Email",
+              "allowSearch" : false,
+              "alignContent" : "left",
+              "allowHTML" : false,
+              "highlightLinks" : false,
+              "useMonospaceFont" : false,
+              "preserveWhitespace" : false,
+              "displayName" : "Vendor_Email"
+            }, {
+              "fieldName" : "Routes",
+              "booleanValues" : [ "false", "true" ],
+              "imageUrlTemplate" : "{{ @ }}",
+              "imageTitleTemplate" : "{{ @ }}",
+              "imageWidth" : "",
+              "imageHeight" : "",
+              "linkUrlTemplate" : "{{ @ }}",
+              "linkTextTemplate" : "{{ @ }}",
+              "linkTitleTemplate" : "{{ @ }}",
+              "linkOpenInNewTab" : true,
+              "type" : "string",
+              "displayAs" : "string",
+              "visible" : true,
+              "order" : 100003,
+              "title" : "Routes",
+              "allowSearch" : false,
+              "alignContent" : "left",
+              "allowHTML" : false,
+              "highlightLinks" : false,
+              "useMonospaceFont" : false,
+              "preserveWhitespace" : false,
+              "displayName" : "Routes"
+            } ]
+          },
+          "invisibleColumns" : [ ],
+          "allowHTMLByDefault" : false,
+          "itemsPerPage" : 25,
+          "paginationSize" : "default",
+          "condensed" : true,
+          "withRowNumber" : false,
+          "frame" : {
+            "showTitle" : true,
+            "headerAlignment" : "center",
+            "title" : "Vendor Wise Route Distribution"
+          }
+        }
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 22,
+        "width" : 6,
+        "height" : 6
+      }
+    }, {
+      "widget" : {
+        "name" : "3ed3c7e7",
+        "queries" : [ {
+          "name" : "dashboards/01f020cdf48d1c57b8d137cf79234815/datasets/01f020d94ea21f9cb0ee4a0fa4f381de_Zone",
+          "query" : {
+            "datasetName" : "5b4ff494",
+            "fields" : [ {
+              "name" : "Zone",
+              "expression" : "`Zone`"
+            }, {
+              "name" : "Zone_associativity",
+              "expression" : "COUNT_IF(`associative_filter_predicate_group`)"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "filter-multi-select",
+          "encodings" : {
+            "fields" : [ {
+              "fieldName" : "Zone",
+              "displayName" : "Zone",
+              "queryName" : "dashboards/01f020cdf48d1c57b8d137cf79234815/datasets/01f020d94ea21f9cb0ee4a0fa4f381de_Zone"
+            } ]
+          },
+          "frame" : {
+            "showTitle" : true,
+            "title" : "Region"
+          }
+        }
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 0,
+        "width" : 3,
+        "height" : 1
+      }
+    } ]
+  } ]
+}
